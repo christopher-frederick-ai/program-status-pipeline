@@ -38,7 +38,7 @@ The "known answers" for the two test milestones came from the design conversatio
 - **The slide deck cannot be fully automated with this approach.** The Slides text-replace operation can only swap text inside a fixed number of placeholders. The template has five bullet slots, but the generated paragraph varies in length. A light week leaves visible blank bullets, and a long week silently drops the overflow. A parallel attempt driven by a different model hit the same limit, so the ceiling is the technique, not the tool. A real fix means building bullets object by object through the Slides API, which is a different project. The honest design here is that **a person finishes the deck** from the generated titles and bullets. See [`samples/`](samples/) for what the output looks like.
 - **A decline is a dead end.** It ends the run without recording why. The approver's reason is collected by n8n and then discarded. A fuller design would route it to whoever owns the source data, since a decline usually means the inputs weren't ready.
 - **Only three agents were built.** The original design also described a Planner, more Executors and a Reviewer.
-- **The n8n workflows are not exported as JSON.** They are shown in `docs/screenshots/`, described in the guide, and the Code-node scripts are in `n8n/`. To run it you would rebuild the workflows in n8n.
+- **The n8n workflow exports are included, with credentials and identifiers removed.** Import `n8n/workflow-1-project-status-reporting.json` and `n8n/workflow-2-slide-build.json`, then reconnect your own Asana, Slack, Gmail and Google credentials and replace the `YOUR_...` placeholders (email address, Slack user ID, Slides template ID, Asana project IDs). Screenshots are in `docs/screenshots/`.
 - **Not verified from scratch.** The build was run against an already-running n8n instance. The Docker Compose file in this repository was adapted for public use (a plain local n8n volume) and has not been run in that form.
 
 ## Documentation
@@ -53,7 +53,7 @@ The "known answers" for the two test milestones came from the design conversatio
 | Path | What it is |
 |---|---|
 | `agent_service/` | FastAPI service: routes, model wrapper, agent instruction files, tests |
-| `n8n/` | The scripts behind n8n's Code nodes (reference copies) |
+| `n8n/` | The two scrubbed n8n workflow exports, plus the scripts behind the Code nodes (reference copies) |
 | `scripts/` | Command-line tools, including the repeated-run consistency check |
 | `sample_data/`, `files/` | Invented source data (milestones, Asana exports, notes) |
 | `runs/` | Saved output from four rounds of instruction tuning |

@@ -56,7 +56,7 @@ Requires Docker Desktop and Python 3. Commands are shown for Windows PowerShell;
 
    n8n is then at http://localhost:5678, and the agent service is at http://localhost:8000 (bound to localhost only). Never run `docker compose down -v`: it deletes the n8n data volume, including your workflows and credentials.
 
-3. Build the workflows in n8n. **A JSON export of the two workflows is not included in this repository.** They are described under *n8n workflows* and *n8n wiring notes* below and pictured in `docs/screenshots/`, and the Code-node scripts are in `n8n/`. Inputs for the file-reading nodes are in `files/`.
+3. Import the two workflows from `n8n/` (`workflow-1-project-status-reporting.json`, `workflow-2-slide-build.json`). Credentials and identifiers were removed from the exports: reconnect your own credentials and replace the `YOUR_...` placeholders (email, Slack user ID, Slides template ID, Asana project IDs). They are also described under *n8n workflows* and *n8n wiring notes* below and pictured in `docs/screenshots/`, and the Code-node scripts are in `n8n/`. Inputs for the file-reading nodes are in `files/`.
 
 4. Smoke test (Python 3, no packages needed):
 

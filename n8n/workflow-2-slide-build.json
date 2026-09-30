@@ -1,0 +1,274 @@
+{
+  "name": "Slide Build",
+  "nodes": [
+    {
+      "parameters": {
+        "fileSelector": "=/files/report_{{ $today.toISODate() }}.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1024,
+        -80
+      ],
+      "id": "8f230584-b742-4724-9e72-d8143673c15e",
+      "name": "Read report json"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -816,
+        -80
+      ],
+      "id": "7dbc3423-300a-4022-a317-eb0e006e22ef",
+      "name": "Parse report json"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node, mode \"Run Once for All Items\". Name: Build slide bullets\n// Workflow 2. Runs after reading report_<date>.json and parsing it (Extract From File,\n// operation \"Extract From JSON\"). Turns each milestone's ALREADY-REVIEWED Executor paragraph\n// into up to 5 plain-text bullets for the slide template placeholders.\n//\n// Deliberately splits `executor_text`, not the Analyst's raw status/explanation fields: the\n// Executor paragraph is what the human actually saw and approved in the Slack draft (and could\n// have hand-edited in the saved .txt file), and it's already deduplicated -- the Executor's own\n// instructions forbid repeating what status/explanation already say. Rebuilding bullets from the\n// raw Analyst fields instead would risk saying something the human never reviewed, and would\n// likely duplicate content across bullets.\n//\n// Output: one item with DATE plus, for each milestone key in the sidecar (ATO, CDR, DEMO):\n// <KEY>_TITLE and <KEY>_SUBTITLE (from the Slide title agent, already saved in the sidecar --\n// no LLM call happens here) and <KEY>_B1..<KEY>_B5. Unused bullet slots are empty strings,\n// matching a milestone with less to report. Ready to feed the Google Slides \"Replace text in\n// a presentation\" node.\n//\n// Also passes through `report` and `subject` from the sidecar untouched, so the combined-email\n// Gmail node at the end of this workflow can reference this one node\n// ($('Build slide bullets').item.json.report / .subject) for the email body and subject line,\n// alongside the deck PDF binary coming off the Export/Download node right before it. Lowercase\n// on purpose -- unlike the *_TITLE/_B1.. keys, these never get run through the Slides\n// placeholder replace step.\n\nconst MAX_BULLETS = 5;\n\n// Same rule scripts/repeat_runs.py uses, so \"R. Chen\" etc. don't get split as if the\n// period ended a sentence.\nfunction sentences(text) {\n  const parts = String(text || '').trim().split(/(?<=[.!?])\\s+(?=[A-Z(\"'])/);\n  const out = [];\n  for (const p of parts) {\n    if (out.length && /\\b[A-Z]\\.$/.test(out[out.length - 1])) {\n      out[out.length - 1] += ' ' + p;\n    } else {\n      out.push(p);\n    }\n  }\n  return out.filter((s) => s.trim());\n}\n\n// \"Extract From File\" (operation \"Extract From JSON\") may put the parsed object directly on\n// the item, or nest it under a \"Destination Key\" (commonly \"data\") depending on that node's\n// settings. Accept either shape rather than guessing which one you have.\nconst raw = $input.first().json;\nconst sidecar = raw && raw.milestones ? raw : raw && raw.data && raw.data.milestones ? raw.data : null;\n\nif (!sidecar) {\n  throw new Error(\n    `Could not find \"milestones\" in the parsed JSON. Top-level keys were: ${Object.keys(raw || {}).join(', ') || '(none)'}. ` +\n    'Check the \"Destination Key\" setting on the Extract From File node, or the file path on the read node before it.'\n  );\n}\n\nconst milestones = sidecar.milestones;\nconst keys = Object.keys(milestones);\n\nif (keys.length === 0) {\n  throw new Error('The \"milestones\" object was found but is empty. Check report_<date>.json on disk.');\n}\n\nconst result = {\n  DATE: sidecar.date ?? '',\n  report: sidecar.report ?? '',\n  subject: sidecar.subject ?? '',\n};\n\nfor (const key of keys) {\n  const m = milestones[key];\n  const bullets = sentences(m.executor_text).slice(0, MAX_BULLETS);\n  if (bullets.length === 0) {\n    throw new Error(`Milestone ${key} (${m.name || 'unnamed'}) has no executor_text to build bullets from.`);\n  }\n  result[`${key}_TITLE`] = m.slide_title || m.name || key;\n  result[`${key}_SUBTITLE`] = m.slide_subtitle || '';\n  for (let i = 0; i < MAX_BULLETS; i++) {\n    result[`${key}_B${i + 1}`] = bullets[i] ?? '';\n  }\n}\n\nreturn [{ json: result }];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -624,
+        -80
+      ],
+      "id": "e459cacc-716a-424d-bad4-9bb22867f13d",
+      "name": "Build slide bullets"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "https://docs.google.com/presentation/d/YOUR_TEMPLATE_ID/edit",
+          "mode": "url"
+        },
+        "name": "=Weekly Status - {{ $json.DATE }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -416,
+        -80
+      ],
+      "id": "e44b38ab-7522-4737-9978-908db9712a76",
+      "name": "Copy file"
+    },
+    {
+      "parameters": {
+        "operation": "replaceText",
+        "presentationId": "={{ $json.id }}",
+        "textUi": {
+          "textValues": [
+            {
+              "matchCase": true,
+              "text": "{{DATE}}",
+              "replaceText": "={{ $('Build slide bullets').item.json.DATE }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{ATO_TITLE}}",
+              "replaceText": "={{ $('Build slide bullets').item.json.ATO_TITLE }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{ATO_SUBTITLE}}",
+              "replaceText": "={{ $('Build slide bullets').item.json.ATO_SUBTITLE }}"
+            },
+            {
+              "text": "{{ATO_B1}}",
+              "replaceText": "={{ $('Build slide bullets').item.json.ATO_B1 }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{ATO_B2}}",
+              "replaceText": "={{ $('Build slide bullets').item.json.ATO_B2 }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{ATO_B3}}",
+              "replaceText": "={{ $('Build slide bullets').item.json.ATO_B3 }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{ATO_B4}}",
+              "replaceText": "={{ $('Build slide bullets').item.json.ATO_B4 }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{ATO_B5}}",
+              "replaceText": "={{ $('Build slide bullets').item.json.ATO_B5 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSlides",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        -80
+      ],
+      "id": "2e9fbd10-ac48-4491-8c77-feae741bbebd",
+      "name": "Replace txt"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Copy file').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "slidesToFormat": "application/pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -32,
+        -80
+      ],
+      "id": "cc0c4a8d-a091-4f9c-815b-52b723657967",
+      "name": "download slides pdf"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@example.com",
+        "subject": "={{ $('Build slide bullets').item.json.subject }}",
+        "message": "={{ $('Build slide bullets').item.json.report }}",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        176,
+        -80
+      ],
+      "id": "bf76fa46-d1a3-451c-9a8c-ec85623bc02f",
+      "name": "Send a message"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1264,
+        -80
+      ],
+      "id": "151965ce-cb53-43b3-9fd5-2266653a41bf",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Read report json": {
+      "main": [
+        [
+          {
+            "node": "Parse report json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse report json": {
+      "main": [
+        [
+          {
+            "node": "Build slide bullets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace txt": {
+      "main": [
+        [
+          {
+            "node": "download slides pdf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "download slides pdf": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build slide bullets": {
+      "main": [
+        [
+          {
+            "node": "Copy file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy file": {
+      "main": [
+        [
+          {
+            "node": "Replace txt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Read report json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}

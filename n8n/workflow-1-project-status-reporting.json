@@ -1,0 +1,796 @@
+{
+  "name": "Porject Status Reporting",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        128
+      ],
+      "id": "b5408748-98e3-4dd8-8a7a-26fea240ed06",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://agent-service:8000/agents/milestone_risk_analyst/run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ input: $json }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1088,
+        112
+      ],
+      "id": "b312f366-5ea3-4040-90b6-5aafc503e990",
+      "name": "Analyst"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://agent-service:8000/agents/milestone_risk_executor/run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ input: { milestone: $('Split Out').item.json.milestone_reference.Milestone, ...$json.output } }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1264,
+        112
+      ],
+      "id": "f245bd3c-7585-4282-ab16-d64403de8eee",
+      "name": "Executor"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/files/program_notes.txt",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        -192
+      ],
+      "id": "134a289a-54cf-4966-be3f-9d15bda4b632",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        32,
+        -192
+      ],
+      "id": "d7e14f2f-5a23-439e-b356-ddb389af93cb",
+      "name": "Extract notes"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        -16
+      ],
+      "id": "9036cc95-dffb-4d4e-8e90-742fc3c50dea",
+      "name": "Extract milestones"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        352,
+        80
+      ],
+      "id": "404f0cdc-9c83-4897-8b70-8404b35b60fa",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/files/milestones.xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        0
+      ],
+      "id": "58bac5c2-b820-4d6c-b0da-90e4633b2e17",
+      "name": "read milestones"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node, mode \"Run Once for All Items\". Name the node: Build request\n// Gathers everything the Cluster call needs into ONE item. It reads the earlier nodes by name,\n// so if you rename a node, change its name here too.\nreturn [{ json: {\n  milestones: $('Extract milestones').all().map(i => i.json),\n  tasks: $('Map tasks').all().map(i => i.json),\n  risks: $('Map risks').all().map(i => i.json),\n  engineering_notes: $('Extract notes').first().json.data ?? '',\n  as_of_date: $today.toISODate(),\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        112
+      ],
+      "id": "a2ad9859-85ab-46ed-be37-89162edd05e1",
+      "name": "Build request"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "clusters",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        912,
+        112
+      ],
+      "id": "33d05154-bb9e-491f-b8ce-ec4cc839834d",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://agent-service:8000/clusters",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        736,
+        112
+      ],
+      "id": "59bef06a-1bdd-42de-94e7-aa67e763de97",
+      "name": "clusters"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node, mode \"Run Once for All Items\". Name the node: Map tasks\n// Turns Asana tasks into the flat rows the agent service expects. The keys match the CSV import\n// exactly, so the Analyst sees the same shape it was tuned on.\n//\n// Works whether the previous node is the native Asana node (one item per task) or an HTTP Request\n// to the Asana API (one item holding a `data` list).\nconst rows = $input.all().flatMap((item) => (Array.isArray(item.json.data) ? item.json.data : [item.json]));\n\nconst clean = (v) => (v === null || v === undefined ? '' : String(v).trim());\n\n// Value of a custom field by its name in Asana (text, dropdown or number).\nfunction field(task, name) {\n  const f = (task.custom_fields ?? []).find((c) => clean(c.name).toLowerCase() === name.toLowerCase());\n  if (!f) return '';\n  return clean(f.display_value ?? f.text_value ?? f.enum_value?.name ?? f.number_value);\n}\n\n// The board column (section) the task sits in.\nfunction section(task) {\n  const m = (task.memberships ?? []).find((x) => clean(x.section?.name));\n  return clean(m?.section?.name);\n}\n\nconst mapped = rows\n  .filter((t) => clean(t.name))\n  .map((t) => ({\n    'Task Name': clean(t.name),\n    'Notes': clean(t.notes),\n    'Assignee': clean(t.assignee?.name) || field(t, 'Assignee'),\n    'Due Date': clean(t.due_on) || clean(t.due_at).slice(0, 10),\n    'Section/Column': section(t),\n    'Related Milestone': field(t, 'Related Milestone'),\n  }));\n\nif (mapped.length === 0) {\n  throw new Error('No tasks came back from Asana. Check the project chosen on the Asana node.');\n}\nif (mapped.every((r) => !r['Related Milestone'])) {\n  throw new Error('No task has a \"Related Milestone\" value. Check that the custom field exists in Asana and that the name matches exactly.');\n}\n\nreturn mapped.map((json) => ({ json }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        160
+      ],
+      "id": "f2cc4984-6514-4b9f-87f6-d95cdc181304",
+      "name": "Map tasks"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node, mode \"Run Once for All Items\". Name the node: Map risks\n// Turns Asana risk-register tasks into the flat rows the agent service expects. The keys match\n// the CSV import exactly, so the Analyst sees the same shape it was tuned on.\n// The \"Section/Column\" value is the risk status (Open, Monitoring, Closed).\n//\n// Works whether the previous node is the native Asana node (one item per task) or an HTTP Request\n// to the Asana API (one item holding a `data` list).\nconst rows = $input.all().flatMap((item) => (Array.isArray(item.json.data) ? item.json.data : [item.json]));\n\nconst clean = (v) => (v === null || v === undefined ? '' : String(v).trim());\n\n// Value of a custom field by its name in Asana (text, dropdown or number).\nfunction field(task, name) {\n  const f = (task.custom_fields ?? []).find((c) => clean(c.name).toLowerCase() === name.toLowerCase());\n  if (!f) return '';\n  return clean(f.display_value ?? f.text_value ?? f.enum_value?.name ?? f.number_value);\n}\n\n// The board column (section) the risk sits in.\nfunction section(task) {\n  const m = (task.memberships ?? []).find((x) => clean(x.section?.name));\n  return clean(m?.section?.name);\n}\n\nconst mapped = rows\n  .filter((t) => clean(t.name))\n  .map((t) => ({\n    'Task Name': clean(t.name),\n    'Notes': clean(t.notes),\n    'Assignee': clean(t.assignee?.name) || field(t, 'Assignee'),\n    'Due Date': clean(t.due_on) || clean(t.due_at).slice(0, 10),\n    'Section/Column': section(t),\n    'Likelihood': field(t, 'Likelihood'),\n    'Impact': field(t, 'Impact'),\n    'Related Milestone': field(t, 'Related Milestone'),\n  }));\n\nif (mapped.length === 0) {\n  throw new Error('No risks came back from Asana. Check the project chosen on the Asana node.');\n}\nif (mapped.every((r) => !r['Related Milestone'])) {\n  throw new Error('No risk has a \"Related Milestone\" value. Check that the custom field exists in Asana and that the name matches exactly.');\n}\n\nreturn mapped.map((json) => ({ json }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        336
+      ],
+      "id": "eb4fbac9-3bca-4ba1-86ef-71bc0dfc15da",
+      "name": "Map risks"
+    },
+    {
+      "parameters": {
+        "url": "https://app.asana.com/api/1.0/projects/YOUR_ASANA_PROJECT_GID/tasks",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "asanaApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "opt_fields",
+              "value": "name,notes,due_on,due_at,assignee.name,custom_fields,memberships.section.name"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -160,
+        368
+      ],
+      "id": "82ec8a33-f714-42f9-9901-25be1b1969f4",
+      "name": "Get risks"
+    },
+    {
+      "parameters": {
+        "url": "https://app.asana.com/api/1.0/projects/YOUR_ASANA_PROJECT_GID/tasks",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "asanaApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "opt_fields",
+              "value": "name,notes,due_on,due_at,assignee.name,custom_fields,memberships.section.name"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -160,
+        160
+      ],
+      "id": "39fd947b-28da-4cd4-b551-74c8e072f163",
+      "name": "Get tasks"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "report",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        0
+      ],
+      "id": "e3720eeb-9d26-4e2d-a6ba-7c603a386e91",
+      "name": "Report to text file"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/files/report_{{ $('Read notes').item.json.date }}.txt",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        2096,
+        0
+      ],
+      "id": "8ea20612-78cc-4fb7-ac26-b14d7afe1067",
+      "name": "Save report"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/files/report_{{ $('Read notes').item.json.date }}.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        2112,
+        192
+      ],
+      "id": "79b4fce5-0fcf-4647-bec1-9436989f65cf",
+      "name": "Save sidecar"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "sidecar_json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        192
+      ],
+      "id": "b9a71e52-32e6-4286-a1d1-f5f1be80304b",
+      "name": "Convert sidecar"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://agent-service:8000/agents/milestone_slide_title/run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ input: { milestone: $('Split Out').item.json.milestone_reference.Milestone, paragraph: $json.output } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1440,
+        112
+      ],
+      "id": "9aa84db7-1520-4d39-bbe7-f8404a680796",
+      "name": "Slide title"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node, mode \"Run Once for All Items\". Name: Format report\n// Runs downstream of \"Slide title\", with Split Out, Analyst and Executor still reachable on the\n// same path (Executor -> Slide title -> Format report). Produces the narrative .txt report\n// (unchanged) PLUS a JSON sidecar with the Analyst's structured fields and the Slide title\n// agent's title/subtitle per milestone, for the slide-deck workflow to read later with no\n// further LLM calls of its own.\n//\n// The sidecar also carries `report` and `subject` (the same strings this node emits at the top\n// level) so Workflow 2's combined email step can read them off the one file it already reads\n// for slide data -- no cross-workflow call, no Merge node, no binary-property collision with\n// the deck PDF. Deliberately NOT threaded through as SLIDE placeholders (they're plain fields\n// on the Build slide bullets output, not ALL-CAPS keys, since they never touch the deck).\nconst TITLE = 'Meridian Defense Systems C2 Platform Program: Weekly Status Report';\nconst date = $today.toISODate();\n\nconst splitItems = $('Split Out').all();\nconst analystItems = $('Analyst').all();\nconst executorItems = $('Executor').all();\nconst titleItems = $input.all();\n\nif (\n  splitItems.length !== analystItems.length ||\n  splitItems.length !== executorItems.length ||\n  splitItems.length !== titleItems.length\n) {\n  throw new Error(\n    `Item count mismatch: Split Out=${splitItems.length}, Analyst=${analystItems.length}, ` +\n    `Executor=${executorItems.length}, Slide title=${titleItems.length}. All four must ` +\n    'produce one item per milestone, in the same order.'\n  );\n}\n\nfunction shortKey(name) {\n  if (name.includes('Authority to Operate')) return 'ATO';\n  if (name.includes('Critical Design Review')) return 'CDR';\n  if (name.includes('Customer Demo') || name.includes('IOC Readiness')) return 'DEMO';\n  return name.replace(/[^A-Za-z0-9]+/g, '_').toUpperCase().slice(0, 12) || 'MILESTONE';\n}\n\nconst milestones = {};\nconst milestoneParagraphs = [];\n\nfor (let i = 0; i < splitItems.length; i++) {\n  const name = String(splitItems[i].json.milestone_reference?.Milestone ?? '').trim();\n  const analyst = analystItems[i].json.output ?? {};\n  const paragraph = String(executorItems[i].json.output ?? '').trim();\n  const titleOut = titleItems[i].json.output ?? {};\n\n  if (paragraph) milestoneParagraphs.push(paragraph);\n\n  milestones[shortKey(name)] = {\n    name,\n    status: String(analyst.status ?? ''),\n    explanation: String(analyst.explanation ?? ''),\n    milestone_status_flagged: analyst.milestone_status_flagged === 'yes' ? 'yes' : 'no',\n    risks_recommended_for_removal: analyst.risks_recommended_for_removal ?? [],\n    executor_text: paragraph,\n    slide_title: String(titleOut.title ?? ''),\n    slide_subtitle: String(titleOut.subtitle ?? ''),\n  };\n}\n\nif (milestoneParagraphs.length === 0) {\n  throw new Error('No Executor output to format. Check the Executor node before this one.');\n}\n\nconst sections = [{ title: 'Milestones & Risks', paragraphs: milestoneParagraphs }];\nconst body = sections.map((s) => `${s.title.toUpperCase()}\\n\\n${s.paragraphs.join('\\n\\n')}`).join('\\n\\n');\nconst report = `${TITLE}\\nReport date: ${date}\\n\\n${body}\\n`;\nconst subject = `${TITLE} (${date})`;\n\nconst sidecar = { title: TITLE, date, report, subject, milestones };\n\nreturn [{\n  json: {\n    report,\n    subject,\n    date,\n    milestone_count: milestoneParagraphs.length,\n    sidecar_json: JSON.stringify(sidecar, null, 2),\n  },\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        112
+      ],
+      "id": "795b2cfd-bee8-4483-857b-85e9c7bdb9b7",
+      "name": "Read notes"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@example.com",
+        "subject": "={{ $('Read notes').item.json.subject }}",
+        "message": "={{ $('Read notes').item.json.report }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2288,
+        0
+      ],
+      "id": "eff1cc32-9ec8-4eb0-a867-d1df0e9211f9",
+      "name": "Send a message",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "c2-program-status"
+        },
+        "text": "={{ $json.slack_text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        2560,
+        352
+      ],
+      "id": "74b10556-cd0f-4bc5-acde-5b78a17fea54",
+      "name": "Send slack message"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node, mode \"Run Once for All Items\". Name the node: Format Slack message\nconst item = $input.first().json;\nconst sidecar = JSON.parse(item.sidecar_json);\n\nconst milestones = Object.values(sidecar.milestones ?? {});\nif (milestones.length === 0) {\n  throw new Error('sidecar_json has no milestones to post. Check the \"Format report\" node before this one.');\n}\n\nconst sections = milestones\n  .filter((m) => m.executor_text)\n  .map((m) => `_${m.name}_\\n${m.executor_text}`);\n\nif (sections.length === 0) {\n  throw new Error('No milestone has executor_text to post. Check the Executor node output.');\n}\n\nconst header = '_C2 Platform Program — Weekly Status_\\n' +\n  `_Milestone & Risk Analyst → Executor pipeline output, week of ${sidecar.date}_`;\nconst footer = '_Posted automatically by the status pipeline_';\n\nconst slack_text = [header, ...sections, footer].join('\\n\\n');\n\nreturn [{ json: { ...item, slack_text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        384
+      ],
+      "id": "fb53185e-6db9-40b6-9bf1-bded0d57d704",
+      "name": "Format slack message"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "user": {
+          "__rl": true,
+          "value": "YOUR_SLACK_USER_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SLACK_USER"
+        },
+        "message": "={{ $json.slack_text }}",
+        "approvalOptions": {
+          "values": {}
+        },
+        "captureResponder": true,
+        "approvers": [
+          "YOUR_SLACK_USER_ID"
+        ],
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeAmount": 48
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        2128,
+        368
+      ],
+      "id": "3faa7dcc-9b0a-42d9-b4fc-11e7104fc98c",
+      "name": "Request approval"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "3CWVk9UvS21vZbZ3",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/3CWVk9UvS21vZbZ3",
+          "cachedResultName": "Slide Build"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2560,
+        144
+      ],
+      "id": "de6a9e4c-8232-49aa-b02c-85c96f1bb604",
+      "name": "Call 'Slide Build'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6e1b69ac-c2e5-4e17-b83f-f30e7795ae14",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2320,
+        272
+      ],
+      "id": "6f345818-4547-4284-99d7-f1cbab1e64a5",
+      "name": "Approved?"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "read milestones",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get tasks",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get risks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyst": {
+      "main": [
+        [
+          {
+            "node": "Executor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract notes": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract milestones": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Build request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read milestones": {
+      "main": [
+        [
+          {
+            "node": "Extract milestones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build request": {
+      "main": [
+        [
+          {
+            "node": "clusters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "clusters": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executor": {
+      "main": [
+        [
+          {
+            "node": "Slide title",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map tasks": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Map risks": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Get risks": {
+      "main": [
+        [
+          {
+            "node": "Map risks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get tasks": {
+      "main": [
+        [
+          {
+            "node": "Map tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report to text file": {
+      "main": [
+        [
+          {
+            "node": "Save report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert sidecar": {
+      "main": [
+        [
+          {
+            "node": "Save sidecar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slide title": {
+      "main": [
+        [
+          {
+            "node": "Read notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read notes": {
+      "main": [
+        [
+          {
+            "node": "Report to text file",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert sidecar",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Format slack message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save report": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save sidecar": {
+      "main": [
+        []
+      ]
+    },
+    "Send slack message": {
+      "main": [
+        []
+      ]
+    },
+    "Format slack message": {
+      "main": [
+        [
+          {
+            "node": "Request approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request approval": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "Call 'Slide Build'",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send slack message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}
