@@ -1,0 +1,71 @@
+Run set: baseline   created 2026-09-21T09:50:38
+Runs per milestone: 5   as_of_date: 2026-09-21   executor: yes   model: claude-sonnet-5
+Prompt fingerprints: analyst f7a0a0ae, executor ee6419f3
+
+=== Authority to Operate (ATO) Approval   (5 runs, 0 failed) ===
+Checks (runs passing)
+  5/5  run completed
+  5/5  valid JSON on first attempt
+  5/5  flag matches expected
+  5/5  removal list matches expected
+  5/5  status is 1-2 sentences
+  5/5  neutral wording (no banned adjectives)
+  5/5  executor: 1-3 sentences
+  5/5  executor: no semicolons
+Variation across runs
+  flag: no x5
+  confidence: 4 x5
+  risks recommended for removal: none x5
+  time per run: 11s average   Analyst output tokens: 561-872
+  wording consistency (1.00 = identical every run): status 0.52, explanation 0.37, executor 0.37
+  status: most different pair, run 3 -> run 4   (similarity 0.25)
+      ATO Approval is genuinely at [-risk of slipping about-] {+risk: the cybersecurity documentation task is blocked and now 11 days overdue pending ISSO review, and the forecast date has slipped roughly+} two weeks past [-its-] {+the+} planned [-date (9/30 to a forecast of 10/14). The cybersecurity documentation package is blocked pending ISSO review comments, and the ISSO office has informally indicated a possible 2-3 week slip,-] {+date,+} consistent with [-the current forecast.-] {+a high-likelihood/high-impact delay risk.+}
+  executor: most different pair, run 4 -> run 5   (similarity 0.22)
+      [-Authority to Operate (ATO)-] {+ATO+} Approval is genuinely at [-risk, as-] {+risk of slipping past its planned date, with+} the cybersecurity documentation [-task remains-] {+package+} blocked {+on ISSO review+} and [-is now 11 days overdue pending ISSO review, pushing the-] {+a+} forecast date [-roughly two weeks past plan. This aligns with-] {+of 2026-10-14. The ISSO office has informally indicated a possible 2-3 week delay, but this timeline is not yet confirmed, which adds some uncertainty to+} the [-open high-likelihood/high-impact risk tied to this milestone, though the ISSO's slip estimate remains informal rather than confirmed in writing.-] {+forecast.+}
+
+=== Critical Design Review (CDR)   (5 runs, 0 failed) ===
+Checks (runs passing)
+  5/5  run completed
+  5/5  valid JSON on first attempt
+  3/5  flag matches expected   <-- not every run
+  5/5  removal list matches expected
+  5/5  status is 1-2 sentences
+  5/5  neutral wording (no banned adjectives)
+  1/5  executor: 1-3 sentences   <-- not every run
+  5/5  executor: no semicolons
+Variation across runs
+  flag: no x2, yes x3
+  confidence: 3 x4, 4 x1
+  risks recommended for removal: RISK-021 x5
+  time per run: 22s average   Analyst output tokens: 1527-1703
+  wording consistency (1.00 = identical every run): status 0.38, explanation 0.32, executor 0.43
+  status: most different pair, run 4 -> run 5   (similarity 0.25)
+      CDR [-is currently trending on track for its 2026-11-15 date, but there is an emerging-] {+shows early signs of+} schedule [-risk from-] {+pressure:+} the radar feed adapter [-integration, which-] {+integration task+} is [-about nine days overdue-] {+now over a week past its due date+} due to incomplete vendor API [-documentation-] {+documentation,+} and {+engineering has flagged that this could push into CDR itself since the review depends on that integration being complete. With roughly two months of runway before the November date this+} is [-called out in engineering notes as-] {+likely still recoverable, but it is not+} a [-potential driver of a CDR slip.-] {+clean on-track picture.+}
+  executor: most different pair, run 4 -> run 5   (similarity 0.30)
+      Critical Design Review (CDR) is [-currently trending on track for its 2026-11-15 date, though-] {+showing early signs of schedule pressure, as+} the radar feed adapter integration {+task+} is [-about nine days overdue-] {+now over a week past+} due [-to-] {+because of+} incomplete vendor API {+documentation, and engineering has flagged that continued slippage could push into CDR itself. With about two months of runway before the November date this is likely still recoverable, but it is not a clean on-track picture, so the reported "On Track" status needs to be corrected to reflect the overdue task and the risk it could delay CDR. RISK-009, which tracks this risk, remains at Medium/Medium in "Monitoring" despite not being updated for the current vendor+} documentation [-and has been flagged in engineering notes as a potential driver of a CDR slip. This delay has not yet been reflected in RISK-009-] {+gap+} or [-translated into a forecast date change, so it should be monitored and formally risk-logged.-] {+the task's slipped due date, leaving the risk register stale.+} RISK-021, {+the+} subcontractor staffing gap on {+the+} fusion engine team, is Closed {+with the backfill hire onboarded+} and can be removed from the risk registrar.
+
+=== Customer Demo / IOC Readiness Review   (5 runs, 0 failed) ===
+Checks (runs passing)
+  5/5  run completed
+  5/5  valid JSON on first attempt
+  5/5  flag matches expected
+  5/5  removal list matches expected
+  5/5  status is 1-2 sentences
+  5/5  neutral wording (no banned adjectives)
+  0/5  analyst mentions R. Chen   <-- not every run
+  5/5  executor: 1-3 sentences
+  5/5  executor: no semicolons
+  0/5  executor mentions R. Chen   <-- not every run
+Variation across runs
+  flag: no x5
+  confidence: 4 x3, 5 x2
+  risks recommended for removal: none x5
+  time per run: 12s average   Analyst output tokens: 655-1014
+  wording consistency (1.00 = identical every run): status 0.42, explanation 0.33, executor 0.36
+  status: most different pair, run 4 -> run 5   (similarity 0.26)
+      Customer Demo / IOC Readiness Review is [-on track-] {+progressing normally+} for [-its planned date. The one active task-] {+a milestone still over two months out; both linked tasks+} (test plan [-update) is progressing normally, and the-] {+update, demo+} dry-run [-logistics task, while not yet started, still has ample lead time before the December date.-] {+logistics) are on schedule against their near-term due dates, with no risks or issues currently tied to this specific milestone.+}
+  executor: most different pair, run 1 -> run 3   (similarity 0.27)
+      [-The-] Customer Demo / IOC Readiness Review is [-tracking normally-] {+on track+} for {+now, with+} its [-planned December 1, 2026 date, with both-] {+two+} linked tasks [-either-] {+(test plan update and demo dry-run logistics coordination)+} progressing [-on schedule or-] {+within their due dates and neither overdue as of the as-of date. No risks are currently logged against this milestone, though a possible ATO approval delay noted in engineering notes is+} not yet [-due-] {+a documented risk for this milestone+} and [-no risks currently attached to the milestone.-] {+is worth monitoring given its potential bearing on IOC readiness.+}
+
+Summary: 22 of 26 checks passed in every run.
+Diff key: [-text-] was in the earlier run and not the later, {+text+} is new in the later run.

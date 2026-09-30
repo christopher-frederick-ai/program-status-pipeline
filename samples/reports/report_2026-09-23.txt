@@ -1,0 +1,10 @@
+Meridian Defense Systems C2 Platform Program: Weekly Status Report
+Report date: 2026-09-23
+
+MILESTONES & RISKS
+
+Authority to Operate (ATO) Approval is trending late, now forecast for 2026-10-14 against a planned date of 2026-09-30, driven by the cybersecurity ATO documentation package that has been blocked since 2026-09-10 pending ISSO review, with the ISSO office informally signaling a possible 2-3 week slip.
+
+The radar feed adapter integration, a dependency for Critical Design Review completion, is roughly 11 days overdue due to incomplete vendor API documentation, with engineering notes warning of a possible additional week or more of delay, while the CDR forecast date of 2026-11-15 remains unadjusted. The reported "On Track" status needs to be corrected to At Risk (or similar) until the integration delay is resolved or the CDR date is reassessed. RISK-021 (subcontractor staffing gap on fusion engine team) is Closed and can be removed from the risk registrar.
+
+The Customer Demo / IOC Readiness Review is roughly two months out, with preparatory work just beginning: the software test plan update is in progress and due 2026-09-24, while customer-requested dry-run logistics are not yet scheduled and due 2026-10-01. No task is overdue and no risk is currently linked to this milestone, so there is no evidence of schedule pressure at this time. The reported "Not Started" status should be corrected, since the linked test plan update task is already in progress.

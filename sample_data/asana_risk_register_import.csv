@@ -1,0 +1,4 @@
+Task Name,Notes,Assignee,Due Date,Section/Column,Likelihood,Impact,Related Milestone
+RISK-014: ATO approval delay could push IOC date,ISSO review is taking longer than planned; weekly sync scheduled with ISSO to track progress.,M. Osei,2026-09-24,Open,High,High,Authority to Operate (ATO) Approval
+RISK-009: Radar feed adapter integration complexity underestimated,Added one sprint of buffer in the schedule; status not yet updated to reflect the current vendor API documentation gap or the linked task's slipped due date.,R. Chen,2026-10-01,Monitoring,Medium,Medium,Critical Design Review (CDR)
+RISK-021: Subcontractor staffing gap on fusion engine team,Backfill hired and fully onboarded; no further action needed.,T. Nguyen,2026-08-29,Closed,Low,Medium,Critical Design Review (CDR)

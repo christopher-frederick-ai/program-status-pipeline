@@ -1,0 +1,323 @@
+{
+  "meta": {
+    "label": "baseline",
+    "created": "2026-09-21T09:50:38",
+    "runs": 5,
+    "as_of": "2026-09-21",
+    "with_executor": true,
+    "model": "claude-sonnet-5",
+    "service": "http://127.0.0.1:8000",
+    "prompts": {
+      "analyst": "f7a0a0ae",
+      "executor": "ee6419f3"
+    }
+  },
+  "milestones": {
+    "Authority to Operate (ATO) Approval": [
+      {
+        "analyst": {
+          "confidence_score": 4,
+          "milestone_status_flagged": "no",
+          "status": "ATO Approval is genuinely at risk of missing its 2026-09-30 target: the cybersecurity documentation package is blocked on ISSO review and is already past its 9/10 due date, with the ISSO office informally indicating a possible 2-3 week slip, consistent with the forecasted 2026-10-14 date.",
+          "explanation": "The reported 'At Risk' status is supported by the evidence: the linked task is overdue and blocked, and the linked high/high risk (RISK-014) documents the same ISSO review delay driving the forecasted slip. One inconsistency worth noting: the engineering notes' 2-3 week slip estimate is described as informal/verbal, not yet reflected in a written risk update, which introduces some uncertainty into the precise forecast date but does not change the appropriateness of the 'At Risk' label.",
+          "risks_recommended_for_removal": []
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 1987,
+          "output_tokens": 739
+        },
+        "request_id": "4e57b1ce2dd8",
+        "model": "claude-sonnet-5",
+        "executor_text": "Authority to Operate (ATO) Approval is genuinely at risk of missing its 2026-09-30 target, as the cybersecurity documentation package remains blocked on ISSO review and is already past its September 10 due date, with a forecasted slip to 2026-10-14. The 2-3 week slip estimate behind that forecast is still informal and has not yet been reflected in a written risk update, adding some uncertainty to the precise date.",
+        "seconds": 11.2
+      },
+      {
+        "analyst": {
+          "confidence_score": 4,
+          "milestone_status_flagged": "no",
+          "status": "ATO Approval is genuinely at risk: the cybersecurity documentation package has been blocked since early September pending ISSO review, and the ISSO office has informally indicated a possible 2-3 week slip past the original 9/30 target, consistent with the current forecast date of 10/14.",
+          "explanation": "The reported 'At Risk' status is well-supported: the linked task is overdue and blocked on ISSO review, and the linked risk (RISK-014, High likelihood/High impact) directly reflects this delay with an active mitigation (weekly ISSO sync). The engineering notes corroborate the slip, though the specific 2-3 week estimate is described as informal/verbal rather than confirmed, which slightly limits certainty but does not contradict the reported status.",
+          "risks_recommended_for_removal": []
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 1987,
+          "output_tokens": 872
+        },
+        "request_id": "2f6fc71a9901",
+        "model": "claude-sonnet-5",
+        "executor_text": "ATO Approval remains at risk, as the cybersecurity documentation package has been blocked since early September pending ISSO review, with the forecast slipping to 10/14 against the original 9/30 target. The ISSO office has informally suggested a 2-3 week delay, but this estimate has not yet been formally confirmed.",
+        "seconds": 13.5
+      },
+      {
+        "analyst": {
+          "confidence_score": 4,
+          "milestone_status_flagged": "no",
+          "status": "ATO Approval is genuinely at risk of slipping about two weeks past its planned date (9/30 to a forecast of 10/14). The cybersecurity documentation package is blocked pending ISSO review comments, and the ISSO office has informally indicated a possible 2-3 week slip, consistent with the current forecast.",
+          "explanation": "The reported 'At Risk' status is well-supported: the sole linked task is blocked and overdue (due 9/10, still blocked as of 9/21), and the linked risk (RISK-014, High/High, Open) directly addresses this delay. The forecast date and the ISSO's informal 2-3 week slip estimate align, so no correction is needed. Confidence is not higher because the ISSO's slip estimate is described as informal/verbal rather than confirmed in writing.",
+          "risks_recommended_for_removal": []
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 1987,
+          "output_tokens": 756
+        },
+        "request_id": "3d0c65addc78",
+        "model": "claude-sonnet-5",
+        "executor_text": "ATO Approval is at risk of slipping about two weeks past its planned date, from 9/30 to a forecast of 10/14, as the cybersecurity documentation package remains blocked pending ISSO review comments. The ISSO office has informally indicated a possible 2-3 week slip, which aligns with the current forecast.",
+        "seconds": 10.8
+      },
+      {
+        "analyst": {
+          "confidence_score": 4,
+          "milestone_status_flagged": "no",
+          "status": "ATO Approval is genuinely at risk: the cybersecurity documentation task is blocked and now 11 days overdue pending ISSO review, and the forecast date has slipped roughly two weeks past the planned date, consistent with a high-likelihood/high-impact delay risk.",
+          "explanation": "The reported 'At Risk' status is supported by the evidence: the documentation task is blocked and overdue, RISK-014 is open with High/High rating tied directly to this milestone, and the forecast date (10/14) aligns with the ISSO's informal estimate of a 2-3 week slip past the 9/30 target. No correction to the status is needed. Confidence is not higher because the ISSO's slip estimate is described as informal/verbal rather than confirmed in writing.",
+          "risks_recommended_for_removal": []
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 1987,
+          "output_tokens": 858
+        },
+        "request_id": "e0598b685821",
+        "model": "claude-sonnet-5",
+        "executor_text": "Authority to Operate (ATO) Approval is genuinely at risk, as the cybersecurity documentation task remains blocked and is now 11 days overdue pending ISSO review, pushing the forecast date roughly two weeks past plan. This aligns with the open high-likelihood/high-impact risk tied to this milestone, though the ISSO's slip estimate remains informal rather than confirmed in writing.",
+        "seconds": 11.8
+      },
+      {
+        "analyst": {
+          "confidence_score": 4,
+          "milestone_status_flagged": "no",
+          "status": "ATO Approval is genuinely at risk of slipping past its planned date; the cybersecurity documentation package remains blocked on ISSO review, and the ISSO office has informally indicated a possible 2-3 week delay, consistent with the current forecast date of 2026-10-14.",
+          "explanation": "The reported 'At Risk' status and forecast slip to 10/14 align with the blocked ATO documentation task and the open high/high RISK-014 tracking ISSO review delays. Engineering notes corroborate the delay, though the ISSO timeline is based on an informal indication rather than a confirmed date, which introduces some uncertainty but does not change the appropriateness of the 'At Risk' label.",
+          "risks_recommended_for_removal": []
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 1987,
+          "output_tokens": 561
+        },
+        "request_id": "6127a1965f4a",
+        "model": "claude-sonnet-5",
+        "executor_text": "ATO Approval is genuinely at risk of slipping past its planned date, with the cybersecurity documentation package blocked on ISSO review and a forecast date of 2026-10-14. The ISSO office has informally indicated a possible 2-3 week delay, but this timeline is not yet confirmed, which adds some uncertainty to the forecast.",
+        "seconds": 8.7
+      }
+    ],
+    "Critical Design Review (CDR)": [
+      {
+        "analyst": {
+          "confidence_score": 3,
+          "milestone_status_flagged": "no",
+          "status": "CDR is currently tracking to its planned date, but the radar feed adapter integration task is about 9 days overdue due to incomplete vendor API documentation, and the team estimates it may take another week or more to resolve. With roughly eight weeks of buffer before the November 15 CDR date, this is manageable for now but should be watched closely since CDR depends on this integration being complete.",
+          "explanation": "The reported 'On Track' status is still reasonably supported given the schedule buffer between the current task slip and the CDR date, so the flag stays 'no'. However, there is an inconsistency worth noting: RISK-009 (radar adapter integration complexity) has not been updated to reflect the current vendor documentation gap or the linked task's slipped due date, and engineering notes describe the potential CDR impact only as a verbal, unconfirmed concern rather than a formally assessed risk change. This should be corrected in the risk register even though it does not currently warrant changing the milestone status.",
+          "risks_recommended_for_removal": [
+            {
+              "risk_id": "RISK-021",
+              "title": "Subcontractor staffing gap on fusion engine team",
+              "reason": "Status is Closed; backfill hire fully onboarded with no further action needed, per both the risk register and engineering notes."
+            }
+          ]
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 2429,
+          "output_tokens": 1527
+        },
+        "request_id": "1a38939e094e",
+        "model": "claude-sonnet-5",
+        "executor_text": "Critical Design Review (CDR) is currently tracking to its planned date, though the radar feed adapter integration task is about nine days overdue due to incomplete vendor API documentation and may take another week or more to resolve. With roughly eight weeks of buffer before the November 15 CDR date this is manageable for now, but it should be watched closely since CDR depends on that integration being complete. RISK-009, covering radar adapter integration complexity, has not been updated to reflect the vendor documentation gap or the task's slipped due date and should be corrected in the risk register. RISK-021, subcontractor staffing gap on the fusion engine team, is Closed and can be removed from the risk registrar.",
+        "seconds": 20.9
+      },
+      {
+        "analyst": {
+          "confidence_score": 4,
+          "milestone_status_flagged": "yes",
+          "status": "CDR is showing emerging schedule risk rather than being fully on track: the radar feed adapter integration task, which CDR depends on, is now 9 days past its due date due to incomplete vendor API documentation, and engineering notes indicate the work may slip by another week or more. If this continues unresolved, it could push the November 15 CDR date.",
+          "explanation": "The reported 'On Track' status doesn't reflect that the radar integration task is overdue and blocked by vendor documentation gaps, or that engineering notes explicitly flag concern this could push CDR. RISK-009's likelihood/impact and 'Monitoring' status haven't been updated to reflect the current vendor gap or the task's slipped due date, which is an inconsistency between the risk register and the actual task state, but doesn't change the flag on the milestone status itself. The ATO/ISSO slip mentioned in engineering notes appears unrelated to CDR and was excluded from this assessment. Confidence is not higher because the schedule impact on CDR is based on verbal/informal discussion, not a formally updated forecast.",
+          "risks_recommended_for_removal": [
+            {
+              "risk_id": "RISK-021",
+              "title": "Subcontractor staffing gap on fusion engine team",
+              "reason": "Status is Closed; backfill has been hired and fully onboarded with no further action needed."
+            }
+          ]
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 2429,
+          "output_tokens": 1636
+        },
+        "request_id": "63756950254b",
+        "model": "claude-sonnet-5",
+        "executor_text": "Critical Design Review (CDR) is showing emerging schedule risk rather than being fully on track. The radar feed adapter integration task it depends on is now 9 days overdue due to incomplete vendor API documentation, and engineering notes indicate the work could slip another week or more, potentially pushing the November 15 CDR date. The reported \"On Track\" status needs to be corrected, as it does not reflect the overdue, blocked integration task or the risk this poses to CDR, and RISK-009's likelihood, impact, and \"Monitoring\" status should also be updated to reflect the current vendor gap and slipped due date. RISK-021 (subcontractor staffing gap on fusion engine team) is Closed and can be removed from the risk registrar.",
+        "seconds": 20.9
+      },
+      {
+        "analyst": {
+          "confidence_score": 3,
+          "milestone_status_flagged": "yes",
+          "status": "CDR is showing early signs of schedule pressure: the radar feed adapter integration task is now 9 days past due due to incomplete vendor API documentation, and engineering notes explicitly flag this as a potential driver of a CDR slip since the review depends on that integration being complete. With roughly eight weeks of runway remaining and a sprint of buffer already added, the milestone is not yet confirmed to slip, but it should be considered at risk rather than fully on track.",
+          "explanation": "The reported 'On Track' status doesn't reflect the overdue radar adapter task (due 9/12, still in progress as of 9/21) or the engineering team's explicit concern that this slip could push CDR. RISK-009 is also stale — it was updated with schedule buffer but the notes confirm its status hasn't been revised to reflect the current vendor documentation gap or the task's slipped due date, so the risk register understates the current exposure. These signals together warrant re-flagging the milestone status rather than leaving it as On Track.",
+          "risks_recommended_for_removal": [
+            {
+              "risk_id": "RISK-021",
+              "title": "Subcontractor staffing gap on fusion engine team",
+              "reason": "Closed — backfill hire fully onboarded and confirmed resolved in both the risk register and engineering notes."
+            }
+          ]
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 2429,
+          "output_tokens": 1703
+        },
+        "request_id": "8aa01d5ade32",
+        "model": "claude-sonnet-5",
+        "executor_text": "Critical Design Review (CDR) is showing early signs of schedule pressure, as the radar feed adapter integration task is now 9 days past due because of incomplete vendor API documentation, and engineering notes flag this as a potential driver of a CDR slip since the review depends on that integration being complete. With about eight weeks of runway and a sprint of buffer already added, the milestone is not yet confirmed to slip but should be considered at risk rather than fully on track. The reported \"On Track\" status needs to be corrected, since it doesn't reflect the overdue task or the engineering team's concern, and RISK-009 also needs updating since it hasn't been revised to reflect the vendor documentation gap or the slipped due date. RISK-021, Subcontractor staffing gap on fusion engine team, is Closed and can be removed from the risk registrar.",
+        "seconds": 23.5
+      },
+      {
+        "analyst": {
+          "confidence_score": 3,
+          "milestone_status_flagged": "no",
+          "status": "CDR is currently trending on track for its 2026-11-15 date, but there is an emerging schedule risk from the radar feed adapter integration, which is about nine days overdue due to incomplete vendor API documentation and is called out in engineering notes as a potential driver of a CDR slip.",
+          "explanation": "The reported 'On Track' status is not contradicted by the evidence given the ~2-month runway remaining before CDR and the fact that the adapter delay has not yet translated into a forecast date change. However, RISK-009 has not been updated to reflect the current vendor documentation gap or the linked task's slipped due date, and the schedule concern raised in engineering notes is still informal (verbal, not yet risk-logged), which is why the flag stays 'no' but confidence is reduced. This is an inconsistency to monitor rather than a reason to change the milestone status now.",
+          "risks_recommended_for_removal": [
+            {
+              "risk_id": "RISK-021",
+              "title": "Subcontractor staffing gap on fusion engine team",
+              "reason": "Status is Closed; backfill hire fully onboarded with no further action needed."
+            }
+          ]
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 2429,
+          "output_tokens": 1630
+        },
+        "request_id": "28a020c6750c",
+        "model": "claude-sonnet-5",
+        "executor_text": "Critical Design Review (CDR) is currently trending on track for its 2026-11-15 date, though the radar feed adapter integration is about nine days overdue due to incomplete vendor API documentation and has been flagged in engineering notes as a potential driver of a CDR slip. This delay has not yet been reflected in RISK-009 or translated into a forecast date change, so it should be monitored and formally risk-logged. RISK-021, subcontractor staffing gap on fusion engine team, is Closed and can be removed from the risk registrar.",
+        "seconds": 21.5
+      },
+      {
+        "analyst": {
+          "confidence_score": 3,
+          "milestone_status_flagged": "yes",
+          "status": "CDR shows early signs of schedule pressure: the radar feed adapter integration task is now over a week past its due date due to incomplete vendor API documentation, and engineering has flagged that this could push into CDR itself since the review depends on that integration being complete. With roughly two months of runway before the November date this is likely still recoverable, but it is not a clean on-track picture.",
+          "explanation": "The reported 'On Track' status doesn't account for the overdue, unresolved radar adapter integration task or engineering's explicit note that continued slippage could push CDR. The linked risk (RISK-009) is still rated Medium/Medium and sits in 'Monitoring' despite the notes stating its status hasn't been updated to reflect the current vendor documentation gap or the task's slipped due date, so the risk register itself is stale. This warning is currently only verbal per the notes, which limits certainty, but combined with the overdue task it's enough to question the 'On Track' label. RISK-021 is marked Closed and its notes (backfill hired and onboarded) are consistent with that closure, so no conflict there.",
+          "risks_recommended_for_removal": [
+            {
+              "risk_id": "RISK-021",
+              "title": "Subcontractor staffing gap on fusion engine team",
+              "reason": "Marked Closed; backfill hire is fully onboarded with no further action needed, consistent with engineering notes."
+            }
+          ]
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 2429,
+          "output_tokens": 1572
+        },
+        "request_id": "7a20b5661251",
+        "model": "claude-sonnet-5",
+        "executor_text": "Critical Design Review (CDR) is showing early signs of schedule pressure, as the radar feed adapter integration task is now over a week past due because of incomplete vendor API documentation, and engineering has flagged that continued slippage could push into CDR itself. With about two months of runway before the November date this is likely still recoverable, but it is not a clean on-track picture, so the reported \"On Track\" status needs to be corrected to reflect the overdue task and the risk it could delay CDR. RISK-009, which tracks this risk, remains at Medium/Medium in \"Monitoring\" despite not being updated for the current vendor documentation gap or the task's slipped due date, leaving the risk register stale. RISK-021, the subcontractor staffing gap on the fusion engine team, is Closed with the backfill hire onboarded and can be removed from the risk registrar.",
+        "seconds": 22.3
+      }
+    ],
+    "Customer Demo / IOC Readiness Review": [
+      {
+        "analyst": {
+          "confidence_score": 5,
+          "milestone_status_flagged": "no",
+          "status": "The Customer Demo / IOC Readiness Review is tracking normally for its planned December 1, 2026 date; the two linked tasks are either progressing on schedule or not yet due, and no risks are currently attached to this milestone.",
+          "explanation": "Both linked tasks have due dates in the future (Sept 24 and Oct 1, 2026) relative to the as-of date, and neither is overdue, supporting the 'Not Started' status for the milestone itself given it's still ~2.5 months out. The engineering notes mention slips in the radar adapter integration and ATO documentation, but these are explicitly tied to the CDR milestone and ATO process, not this one, so they don't warrant a status change here. No risks are linked to this milestone, so there's nothing in the risk register to reconcile.",
+          "risks_recommended_for_removal": []
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 1942,
+          "output_tokens": 971
+        },
+        "request_id": "643472b7803e",
+        "model": "claude-sonnet-5",
+        "executor_text": "The Customer Demo / IOC Readiness Review is tracking normally for its planned December 1, 2026 date, with both linked tasks either progressing on schedule or not yet due and no risks currently attached to the milestone.",
+        "seconds": 12.9
+      },
+      {
+        "analyst": {
+          "confidence_score": 4,
+          "milestone_status_flagged": "no",
+          "status": "Customer Demo / IOC Readiness Review is on track for its December 1 planned date. Preparatory tasks (test plan update, dry-run logistics) are progressing or queued with due dates well ahead of the milestone, and no risks or issues specific to this review have been raised.",
+          "explanation": "The 'Not Started' status matches the evidence: linked tasks are either in progress or not yet started but not overdue, and neither the task tracker nor engineering notes describe any blocker specific to this milestone. The radar adapter slip and ATO review delay mentioned in the notes are tied to CDR and ATO activities, not this milestone, so they don't change its status. No risks are currently logged against this milestone, which is a minor gap given the customer's dry-run request is still unscheduled, but it doesn't warrant reclassifying the reported status.",
+          "risks_recommended_for_removal": []
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 1942,
+          "output_tokens": 810
+        },
+        "request_id": "26f1f0c4e99b",
+        "model": "claude-sonnet-5",
+        "executor_text": "Customer Demo / IOC Readiness Review is on track for its December 1 planned date, with preparatory tasks such as the test plan update and dry-run logistics progressing or queued well ahead of schedule. No risks or issues specific to this review have been raised, though the customer's dry-run request remains unscheduled.",
+        "seconds": 12.7
+      },
+      {
+        "analyst": {
+          "confidence_score": 4,
+          "milestone_status_flagged": "no",
+          "status": "Customer Demo / IOC Readiness Review is on track for now: its two linked tasks (test plan update and demo dry-run logistics coordination) are progressing within their due dates and neither is overdue as of the as-of date. No risks are currently logged against this milestone.",
+          "explanation": "The reported 'Not Started' status matches the underlying tasks, which are either in progress or not yet started but not overdue, and no risks are linked to this milestone. Engineering notes mention a radar adapter slip and a possible ATO approval delay, but both are explicitly tied to the CDR milestone or lack a documented status update, not this one, so they don't contradict the current status. However, since ATO approval could plausibly bear on IOC readiness, this is worth monitoring even though it isn't yet formalized as a risk.",
+          "risks_recommended_for_removal": []
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 1942,
+          "output_tokens": 1014
+        },
+        "request_id": "ff6a6acda7ff",
+        "model": "claude-sonnet-5",
+        "executor_text": "Customer Demo / IOC Readiness Review is on track for now, with its two linked tasks (test plan update and demo dry-run logistics coordination) progressing within their due dates and neither overdue as of the as-of date. No risks are currently logged against this milestone, though a possible ATO approval delay noted in engineering notes is not yet a documented risk for this milestone and is worth monitoring given its potential bearing on IOC readiness.",
+        "seconds": 14.3
+      },
+      {
+        "analyst": {
+          "confidence_score": 5,
+          "milestone_status_flagged": "no",
+          "status": "Customer Demo / IOC Readiness Review is on track for its planned date. The one active task (test plan update) is progressing normally, and the dry-run logistics task, while not yet started, still has ample lead time before the December date.",
+          "explanation": "The reported 'Not Started' status matches the evidence: both linked tasks are either on schedule or not yet due, and there are no risks or engineering notes specifically tied to this milestone indicating slippage. The engineering notes about the radar adapter delay and ATO review slip relate to other efforts (CDR dependency, ATO approval) and are not linked to this milestone, so they don't affect this assessment.",
+          "risks_recommended_for_removal": []
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 1942,
+          "output_tokens": 655
+        },
+        "request_id": "55f1ee8865a2",
+        "model": "claude-sonnet-5",
+        "executor_text": "Customer Demo / IOC Readiness Review is on track for its planned date, with the test plan update progressing normally and the dry-run logistics task still having ample lead time before December.",
+        "seconds": 9.4
+      },
+      {
+        "analyst": {
+          "confidence_score": 4,
+          "milestone_status_flagged": "no",
+          "status": "Customer Demo / IOC Readiness Review is progressing normally for a milestone still over two months out; both linked tasks (test plan update, demo dry-run logistics) are on schedule against their near-term due dates, with no risks or issues currently tied to this specific milestone.",
+          "explanation": "The reported 'Not Started' status with TBD forecast is consistent with the evidence: the planned date is still ~2.5 months away, both tracked tasks are within their due dates, and no risks are linked. Engineering notes mention a radar adapter integration slip and possible ATO delay, but these are explicitly tied to CDR, not this milestone, so they don't warrant flagging this status. The empty risk register is appropriate given no risks have been identified against this milestone yet.",
+          "risks_recommended_for_removal": []
+        },
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 1942,
+          "output_tokens": 795
+        },
+        "request_id": "59b912e3266f",
+        "model": "claude-sonnet-5",
+        "executor_text": "Customer Demo / IOC Readiness Review is progressing normally for a milestone still over two months out, with both linked tasks—the test plan update and demo dry-run logistics—on schedule and no risks currently tied to it. Engineering notes about a radar adapter integration slip and possible ATO delay relate to CDR, not this milestone, and require no action here.",
+        "seconds": 11.4
+      }
+    ]
+  }
+}

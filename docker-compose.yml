@@ -1,0 +1,45 @@
+# Program Status Reporting Pipeline: n8n + agent service.
+# Run from this folder:  docker compose up -d --build
+#
+# NEVER run `docker compose down -v`: it deletes the n8n data volume (workflows, credentials).
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      # Required. If this were missing, n8n would generate a NEW key and could no longer
+      # decrypt credentials saved in the existing data volume.
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:?Set N8N_ENCRYPTION_KEY in .env}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-America/Los_Angeles}
+      - TZ=${GENERIC_TIMEZONE:-America/Los_Angeles}
+      - N8N_SECURE_COOKIE=false
+      # Limit the Read/Write Files node to the shared folder below.
+      - N8N_RESTRICT_FILE_ACCESS_TO=/files
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./files:/files
+
+  agent-service:
+    build: ./agent_service
+    restart: unless-stopped
+    # Only the variables the service needs; the n8n encryption key never reaches this container.
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-sonnet-5}
+      - SERVICE_SHARED_SECRET=${SERVICE_SHARED_SECRET:?Set SERVICE_SHARED_SECRET in .env}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    # n8n reaches this at http://agent-service:8000 on the internal network. The host mapping
+    # is bound to localhost only, for scripts/smoke_test.py and run_analysis.py.
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      # Instruction files are read-only so you can edit them on Windows and call
+      # POST /admin/reload instead of rebuilding the image.
+      - ./agent_service/agents:/app/agents:ro
+
+volumes:
+  # Local named volume that stores n8n's workflows and credentials.
+  n8n_data:
