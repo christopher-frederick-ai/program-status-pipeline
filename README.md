@@ -65,7 +65,8 @@ The "known answers" for the two test milestones came from the design conversatio
 | `deck_service/` | FastAPI service that builds the weekly deck with Claude: adapter, builder, 21 checks, instruction file, tests, fixtures |
 | `n8n/` | Scrubbed n8n exports: Workflow 1, Workflow 3 (`alternatives/` holds the Slack-button and Gmail-only variants, `build_workflow3.py` generates them), `legacy/` holds the original Workflow 2, plus reference copies of the Code node scripts |
 | `scripts/` | Command-line tools, including the repeated-run consistency check |
-| `sample_data/`, `files/` | Invented source data (milestones, Asana exports, notes) |
+| `sample_data/` | The one committed copy of the invented source data (milestones, Asana exports, notes); feeds the tests and scripts |
+| `files/` | The shared runtime folder mounted as `/files`: copy `sample_data/` in once; reports and decks are generated here and git-ignored |
 | `runs/` | Saved output from four rounds of instruction tuning |
 | `samples/` | Example generated reports, the old template-based deck, and an LLM-built deck for the same week |
 | `docker-compose.yml` | Runs n8n, the agent service and the deck service |

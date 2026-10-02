@@ -1,9 +1,0 @@
-Weekly Program Notes — Meridian Defense Systems, C2 Platform Program
-Week of 2026-09-14
-
-- PDR closed out clean back in April; no open actions carried forward.
-- Radar feed adapter integration (R. Chen) is running behind — flagged in Tuesday's standup that the vendor's API documentation is incomplete, and the team may need another week or more beyond the current task due date. This hasn't been formally reflected as an updated risk status yet; it's been discussed verbally but not written up.
-- ISSO office confirmed the ATO documentation package is under review. No firm approval date yet; office informally indicated a possible 2-3 week slip past the original target.
-- Subcontractor staffing gap on the fusion engine team is resolved — backfill hire is fully ramped, no further concerns there.
-- Customer requested a dry-run of the demo before the formal review; logistics still being worked, nothing scheduled yet.
-- General observation: as the radar adapter task slips, it's worth watching whether that pushes the Critical Design Review milestone, since CDR depends on that integration work being complete.

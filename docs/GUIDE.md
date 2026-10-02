@@ -62,16 +62,17 @@ Requires Docker Desktop and Python 3. Commands are shown for Windows PowerShell;
 
    Keep `N8N_ENCRYPTION_KEY` safe and never change it afterwards: n8n uses it to encrypt the credentials it stores, and a different key can no longer read them.
 
-2. Start n8n and the agent service from the repository folder:
+2. Copy the sample source data into the shared folder, then start n8n, the agent service and the deck service from the repository folder (`files\` is mounted into the containers as `/files`; `sample_data\` is the single committed copy of the data):
 
    ```powershell
+   Copy-Item sample_data\* files\
    docker compose up -d --build
    docker compose logs -f agent-service
    ```
 
    n8n is then at http://localhost:5678, and the agent service is at http://localhost:8000 (bound to localhost only). Never run `docker compose down -v`: it deletes the n8n data volume, including your workflows and credentials.
 
-3. Import the two workflows from `n8n/` (`workflow-1-project-status-reporting.json`, `workflow-2-slide-build.json`). Credentials and identifiers were removed from the exports: reconnect your own credentials and replace the `YOUR_...` placeholders (email, Slack user ID, Slides template ID, Asana project IDs). They are also described under *n8n workflows* and *n8n wiring notes* below and pictured in `docs/screenshots/`, and the Code-node scripts are in `n8n/`. Inputs for the file-reading nodes are in `files/`.
+3. Import the workflows from `n8n/`: `workflow-1-project-status-reporting.json` and `workflow-3-deck-review.json` (the original Workflow 2 is in `n8n/legacy/`). In Workflow 1, point the `Call 'Slide Build'` node at the imported Workflow 3. Credentials and identifiers were removed from the exports: reconnect your own credentials and replace the `YOUR_...` placeholders (email, Slack user ID, Asana project IDs, and the Header Auth credential for the two services). They are also described under *n8n workflows* and *n8n wiring notes* below and pictured in `docs/screenshots/`, and the Code-node scripts are in `n8n/`. Inputs for the file-reading nodes are in `files/`.
 
 4. Smoke test (Python 3, no packages needed):
 

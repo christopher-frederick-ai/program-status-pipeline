@@ -1,7 +1,0 @@
-Task Name,Notes,Assignee,Due Date,Section/Column,Related Milestone
-Finalize C2 message schema v2.1,"On track; internal review complete, sending to subteam leads for sign-off.",J. Alvarez,2026-09-19,In Progress,Critical Design Review (CDR)
-Integrate radar feed adapter with fusion engine,Vendor API docs incomplete; integration taking longer than the original estimate.,R. Chen,2026-09-12,In Progress,Critical Design Review (CDR)
-Complete cybersecurity ATO documentation package,Blocked pending ISSO review comments; package resubmitted 9/10.,M. Osei,2026-09-10,Blocked,Authority to Operate (ATO) Approval
-Conduct interface control document (ICD) review with subcontractor,"Review completed, no open actions.",T. Nguyen,2026-09-05,Done,Critical Design Review (CDR)
-Update software test plan for Release 3.2,"Drafting in progress, on track for planned due date.",J. Alvarez,2026-09-24,In Progress,Customer Demo / IOC Readiness Review
-Coordinate customer demo dry-run logistics,Not yet started; customer requested a dry-run ahead of the formal review.,R. Chen,2026-10-01,Not Started,Customer Demo / IOC Readiness Review
