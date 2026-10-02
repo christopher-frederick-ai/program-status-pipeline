@@ -1,0 +1,45 @@
+{
+  "_comment": "SYNTHETIC light week (one in-report milestone, nothing overdue, no removable risks). Not real data; for exercising shrink behaviour.",
+  "sidecar": {
+    "title": "Meridian Defense Systems C2 Platform Program: Weekly Status Report",
+    "date": "2026-10-01",
+    "milestones": {
+      "CDR": {
+        "name": "Critical Design Review (CDR)",
+        "status": "CDR is not on track: the radar feed adapter integration task, which engineering notes identify as a direct dependency for CDR, was due 2026-09-12 and remains in progress as of 2026-09-24, with the team anticipating another week or more of delay due to incomplete vendor API documentation. With CDR planned for 2026-11-15, there is still runway, but the milestone's readiness depends on resolving this overdue integration work.",
+        "explanation": "The milestone is reported 'On Track', but a task tied to CDR (radar feed adapter integration) is 12+ days overdue and engineering notes explicitly flag it as a CDR dependency at risk of further slipping. This overdue, dependency-linked task means the 'On Track' status does not accurately reflect current evidence. Separately, RISK-009's status ('Monitoring') has not been updated to reflect the vendor documentation gap or the task's slipped due date, an inconsistency between the risk register and the task tracker/notes, though it does not change the flag since the task overdue status already justifies revising the milestone status.",
+        "milestone_status_flagged": "no",
+        "risks_recommended_for_removal": [],
+        "executor_text": "Critical Design Review (CDR) is on track for 2026-11-15. The radar feed adapter integration was completed on 2026-09-29 and the vendor API documentation gap is closed.",
+        "slide_title": "CDR On Track",
+        "slide_subtitle": "Radar adapter complete"
+      }
+    }
+  },
+  "milestone_rows": [
+    {
+      "Milestone": "Preliminary Design Review (PDR)",
+      "Planned Date": "2026-04-15",
+      "Forecast/Actual Date": "2026-04-15",
+      "Status": "Complete"
+    },
+    {
+      "Milestone": "Authority to Operate (ATO) Approval",
+      "Planned Date": "2026-09-30",
+      "Forecast/Actual Date": "2026-10-14",
+      "Status": "At Risk"
+    },
+    {
+      "Milestone": "Critical Design Review (CDR)",
+      "Planned Date": "2026-11-15",
+      "Forecast/Actual Date": "2026-11-15",
+      "Status": "On Track"
+    },
+    {
+      "Milestone": "Customer Demo / IOC Readiness Review",
+      "Planned Date": "2026-12-01",
+      "Forecast/Actual Date": "TBD",
+      "Status": "Not Started"
+    }
+  ]
+}

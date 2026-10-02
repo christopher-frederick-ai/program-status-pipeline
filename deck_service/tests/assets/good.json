@@ -1,0 +1,78 @@
+{
+  "report_date": "2026-09-24",
+  "slides": [
+    {
+      "n": 1,
+      "kind": "cover",
+      "title": "Cover"
+    },
+    {
+      "n": 2,
+      "kind": "exec_summary",
+      "title": "One of three open milestones has an unsupported status"
+    },
+    {
+      "n": 3,
+      "kind": "schedule",
+      "title": "Milestone schedule and evidence check"
+    },
+    {
+      "n": 4,
+      "kind": "accuracy",
+      "title": "Is the reported status accurate?"
+    },
+    {
+      "n": 5,
+      "kind": "risks",
+      "title": "Two overdue items and one unassigned task are named in the report"
+    },
+    {
+      "n": 6,
+      "kind": "tasks",
+      "title": "Four tasks are named in the report"
+    },
+    {
+      "n": 7,
+      "kind": "decisions",
+      "title": "Proposed decisions and asks"
+    }
+  ],
+  "accuracy": [
+    {
+      "milestone_id": "ATO",
+      "reported": "At Risk",
+      "evidence_supports": "yes"
+    },
+    {
+      "milestone_id": "CDR",
+      "reported": "On Track",
+      "evidence_supports": "no"
+    },
+    {
+      "milestone_id": "DEMO",
+      "reported": "Not Started",
+      "evidence_supports": "yes"
+    }
+  ],
+  "covered": {
+    "milestones": [
+      "PDR",
+      "ATO",
+      "CDR",
+      "DEMO"
+    ],
+    "removal_risks": [
+      "RISK-021"
+    ]
+  },
+  "derived_content": [
+    "14 days: ATO forecast 2026-10-14 vs plan 2026-09-30",
+    "1 of 4 milestones Complete; 1 of 3 open in-report unsupported"
+  ],
+  "omitted_asks": [],
+  "qa": {
+    "passes": 0,
+    "issues_remaining": []
+  },
+  "slide_count": 7
+}

@@ -1,0 +1,65 @@
+{
+  "_comment": "REAL sidecar files/report_2026-09-22.json + files/milestones.xlsx rows (copied unmodified).",
+  "sidecar": {
+    "title": "Meridian Defense Systems C2 Platform Program: Weekly Status Report",
+    "date": "2026-09-22",
+    "milestones": {
+      "ATO": {
+        "name": "Authority to Operate (ATO) Approval",
+        "status": "Authority to Operate (ATO) Approval is at risk of missing its 2026-09-30 planned date. The cybersecurity ATO documentation task has been blocked since its 2026-09-10 due date pending ISSO review, and the forecast has slipped to 2026-10-14, roughly two weeks late, consistent with the ISSO office's informal indication of a 2-3 week delay.",
+        "explanation": "The reported 'At Risk' status is supported by the evidence: the documentation task is overdue and blocked, and RISK-014 (ATO delay) is open with High/High likelihood and impact. One inconsistency worth noting: the ISSO's 2-3 week slip estimate is described as informal/verbal and has not yet been reflected in the risk register's due date or likelihood rating, but this does not change the appropriateness of the current 'At Risk' label. No resource conflict applies to this milestone, as the ATO documentation task has no named assignee.",
+        "milestone_status_flagged": "no",
+        "risks_recommended_for_removal": [],
+        "executor_text": "Authority to Operate (ATO) Approval is at risk of missing its 2026-09-30 planned date, as the blocked cybersecurity documentation task pending ISSO review has pushed the forecast to 2026-10-14, about two weeks late. The ISSO's informal estimate of a 2-3 week delay has not yet been reflected in the risk register's due date or likelihood rating, and the register should be updated to match."
+      },
+      "CDR": {
+        "name": "Critical Design Review (CDR)",
+        "status": "CDR is reported On Track for 2026-11-15, but the radar feed adapter integration task\u2014explicitly called out as a CDR dependency\u2014was due 2026-09-12 and remains In Progress as of 2026-09-22, with the team needing another week or more due to incomplete vendor API documentation. While the planned date is still about two months out, this overdue dependency is an active schedule risk that should be reflected in the milestone status.",
+        "explanation": "The radar feed adapter task is 10 days overdue and engineering notes directly tie its slip to CDR risk, so an On Track status does not accurately reflect the evidence; status should be changed to At Risk or similar pending resolution of the vendor documentation gap. Separately, RISK-009 (Medium/Medium, Monitoring) has not been updated to reflect the current vendor API gap or the task's slipped due date, an inconsistency between the risk register and the task tracker/notes, though it does not change the flag since the flag is already driven by the overdue task. No resource conflict was identified: R. Chen's slipped task is on this same milestone, not a competing one.",
+        "milestone_status_flagged": "yes",
+        "risks_recommended_for_removal": [
+          {
+            "risk_id": "RISK-021",
+            "title": "Subcontractor staffing gap on fusion engine team",
+            "reason": "Status is Closed; backfill hired and fully onboarded with no further action needed, confirmed by engineering notes."
+          }
+        ],
+        "executor_text": "CDR is reported On Track for 2026-11-15, but the radar feed adapter integration task, a called-out CDR dependency, was due 2026-09-12 and remains in progress as of 2026-09-22. The team needs at least another week to finish it because of incomplete vendor API documentation, making this an active schedule risk even though the planned date is still about two months out. The reported status should be corrected to At Risk or similar to reflect this overdue dependency. RISK-021, the subcontractor staffing gap on the fusion engine team, is Closed with the backfill hired and onboarded, and can be removed from the risk registrar."
+      },
+      "DEMO": {
+        "name": "Customer Demo / IOC Readiness Review",
+        "status": "Customer Demo / IOC Readiness Review remains on track for its 2026-12-01 planned date. The software test plan update (due 2026-09-24) is progressing on schedule, and the newly added dry-run logistics task (due 2026-10-01) is not yet started but is not overdue as of 2026-09-22.",
+        "explanation": "No tasks tied to this milestone are overdue and no risks are linked to it, so 'Not Started' is consistent with the evidence given the milestone is still over two months out. The radar adapter slip and ATO review delay noted in engineering notes are explicitly tied to CDR, not this milestone, so they do not change this flag. No risk entry has been created yet for the newly added customer dry-run requirement, which is worth tracking but does not itself make the current status inaccurate. Task assignees are blank, so no resource conflict with R. Chen or others can be confirmed for this milestone's tasks.",
+        "milestone_status_flagged": "no",
+        "risks_recommended_for_removal": [],
+        "executor_text": "Customer Demo / IOC Readiness Review remains on track for its 2026-12-01 planned date, with the software test plan update progressing on schedule and the newly added dry-run logistics task not yet started but not overdue as of 2026-09-22. No risk entry has been created yet for the new customer dry-run requirement and this is worth tracking."
+      }
+    }
+  },
+  "milestone_rows": [
+    {
+      "Milestone": "Preliminary Design Review (PDR)",
+      "Planned Date": "2026-04-15",
+      "Forecast/Actual Date": "2026-04-15",
+      "Status": "Complete"
+    },
+    {
+      "Milestone": "Authority to Operate (ATO) Approval",
+      "Planned Date": "2026-09-30",
+      "Forecast/Actual Date": "2026-10-14",
+      "Status": "At Risk"
+    },
+    {
+      "Milestone": "Critical Design Review (CDR)",
+      "Planned Date": "2026-11-15",
+      "Forecast/Actual Date": "2026-11-15",
+      "Status": "On Track"
+    },
+    {
+      "Milestone": "Customer Demo / IOC Readiness Review",
+      "Planned Date": "2026-12-01",
+      "Forecast/Actual Date": "TBD",
+      "Status": "Not Started"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-# Program Status Reporting Pipeline: n8n + agent service.
+# Program Status Reporting Pipeline: n8n + agent service + deck service.
 # Run from this folder:  docker compose up -d --build
 #
 # NEVER run `docker compose down -v`: it deletes the n8n data volume (workflows, credentials).
@@ -39,6 +39,27 @@ services:
       # Instruction files are read-only so you can edit them on Windows and call
       # POST /admin/reload instead of rebuilding the image.
       - ./agent_service/agents:/app/agents:ro
+
+  deck-service:
+    build: ./deck_service
+    restart: unless-stopped
+    # Builds the weekly leadership deck with Claude (code execution + pptx skill). n8n reaches it at
+    # http://deck-service:8010/render_weekly_deck. It reads nothing from n8n's volume except ./files.
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-sonnet-5}
+      - SERVICE_SHARED_SECRET=${SERVICE_SHARED_SECRET:?Set SERVICE_SHARED_SECRET in .env}
+      - DECK_OUTPUT_DIR=/files/decks
+      - DECK_MAX_REPAIRS=${DECK_MAX_REPAIRS:-2}
+      - DECK_MAX_CALLS=${DECK_MAX_CALLS:-6}
+      - DECK_MAX_TOKENS=${DECK_MAX_TOKENS:-20000}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      # Finished decks land in ./files/decks, which n8n also sees as /files/decks.
+      - ./files:/files
+    # Internal network only: no host port. Add "127.0.0.1:8010:8010" under ports to call it from scripts.
+    expose:
+      - "8010"
 
 volumes:
   # Local named volume that stores n8n's workflows and credentials.

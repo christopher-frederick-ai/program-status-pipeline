@@ -1,0 +1,798 @@
+{
+  "name": "Deck Review and Distribute",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1500,
+        0
+      ],
+      "id": "760b0c5a-df36-52ee-bcd2-9c46e71088ac",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1500,
+        200
+      ],
+      "id": "1a0121bd-311f-5f89-b5e8-6c999544be05",
+      "name": "Manual run"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6951af92-0c46-5479-b35f-19099540d47e",
+              "name": "date",
+              "value": "={{ $json.date || $today.toISODate() }}",
+              "type": "string"
+            },
+            {
+              "id": "c090dfb9-d69b-55e4-a0c6-8ef77ef9c4b7",
+              "name": "reviewer_email",
+              "value": "YOUR_EMAIL@example.com",
+              "type": "string"
+            },
+            {
+              "id": "3fa55776-fb93-5b5e-8049-b4218ad3749a",
+              "name": "slack_approver_id",
+              "value": "YOUR_SLACK_USER_ID",
+              "type": "string"
+            },
+            {
+              "id": "346f2567-2e4b-59e6-a538-8353d5c24324",
+              "name": "distro_emails",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "a0887dbc-e39d-5cf3-a606-30353d96442f",
+              "name": "distro_send_enabled",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1280,
+        100
+      ],
+      "id": "2b48af0e-e8b7-5dba-8c7e-92ad5c90d99f",
+      "name": "Config"
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/files/report_{{ $json.date }}.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1060,
+        100
+      ],
+      "id": "2bbc5368-d9b7-5eca-b915-86beca532b3b",
+      "name": "Read sidecar"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -840,
+        100
+      ],
+      "id": "c785a9cb-b25e-5af2-9c3c-8e72a273ef3c",
+      "name": "Extract sidecar"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/files/milestones.xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -620,
+        100
+      ],
+      "id": "58ecae7d-8329-5be1-b525-e4a0ef3c9d38",
+      "name": "read milestones"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        100
+      ],
+      "id": "2309417f-d6a9-5f4a-8733-27e3f69ff569",
+      "name": "Extract milestones"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "milestone_rows",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        100
+      ],
+      "id": "4e13f3a9-4b3c-506a-a1cc-4a4e2f5123f5",
+      "name": "Aggregate rows"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://deck-service:8010/render_weekly_deck",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ sidecar: $('Extract sidecar').first().json, milestone_rows: $json.milestone_rows }) }}",
+        "options": {
+          "timeout": 1200000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        40,
+        100
+      ],
+      "id": "e74e8b7f-b93a-5bc8-a08e-1ac7205a45d0",
+      "name": "Build deck",
+      "onError": "continueErrorOutput",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.slack_approver_id }}",
+          "mode": "id"
+        },
+        "text": "=Weekly deck build FAILED for {{ $('Config').first().json.date }}. Nothing was sent to anyone. Error: {{ $json.error?.message || 'unknown' }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        280,
+        300
+      ],
+      "id": "70d8319f-0468-5aa2-955b-bcea12dff5c7",
+      "name": "Notify build failed"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $('Build deck').first().json.files.pptx }}",
+        "options": {
+          "dataPropertyName": "pptx"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        -60
+      ],
+      "id": "4b3cff89-9559-59c2-944c-e89df1e179d5",
+      "name": "Read draft pptx"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $('Build deck').first().json.files.pdf }}",
+        "options": {
+          "dataPropertyName": "pdf"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        100
+      ],
+      "id": "6573a7ee-605d-54da-9ec5-346e337b77c3",
+      "name": "Read draft pdf"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        500,
+        20
+      ],
+      "id": "f9580233-acb9-502b-a266-0d004c40d4fa",
+      "name": "Merge draft files"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Config').first().json.reviewer_email }}",
+        "subject": "=[DRAFT] C2 Weekly Leadership Deck {{ $('Config').first().json.date }}",
+        "emailType": "text",
+        "message": "=DRAFT for your review. Not yet sent to anyone else.\n\nStatus: {{ $('Build deck').first().json.status }}\nSlides: {{ $('Build deck').first().json.slide_count }}\nFailed automated checks: {{ $('Build deck').first().json.failed_checks.length ? $('Build deck').first().json.failed_checks.join(', ') : 'none' }}\nDraft saved at: {{ $('Build deck').first().json.files.pptx }}",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "pptx"
+              },
+              {
+                "property": "pdf"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        20
+      ],
+      "id": "0f39d813-f98e-5c49-a508-7a1a963df26f",
+      "name": "Email draft to reviewer"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "={{ $('Config').first().json.reviewer_email }}",
+        "subject": "=APPROVAL NEEDED: C2 weekly deck {{ $('Config').first().json.date }}",
+        "message": "=Weekly leadership deck draft for {{ $('Config').first().json.date }} is attached to the earlier draft email.<br><br>Status: {{ $('Build deck').first().json.status }}<br>Slides: {{ $('Build deck').first().json.slide_count }}<br>Failed automated checks: {{ $('Build deck').first().json.failed_checks.length ? $('Build deck').first().json.failed_checks.join(', ') : 'none' }}<br>Draft saved at: {{ $('Build deck').first().json.files.pptx }}<br><br>Send to the distribution list exactly as drafted, or edit it yourself first?",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Send to distribution as-is",
+            "disapproveLabel": "I'll edit and send myself"
+          }
+        },
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeAmount": 72
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        940,
+        20
+      ],
+      "id": "b9d28869-a28c-5309-a5dc-0019e32b01f7",
+      "name": "Request deck approval"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3b6c7dbd-bb7d-5372-bb94-6d8c65d47a51",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1160,
+        20
+      ],
+      "id": "d804478a-9e43-5563-a516-314b50191b63",
+      "name": "Approved?"
+    },
+    {
+      "parameters": {
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.slack_approver_id }}",
+          "mode": "id"
+        },
+        "text": "=Nothing was sent. The draft is at {{ $('Build deck').first().json.files.pptx }} (and the PDF beside it). Edit and send it yourself.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1380,
+        200
+      ],
+      "id": "56c7cc3f-4b5a-5a59-8102-fa2643b53f87",
+      "name": "Slack: you will send"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9f3895fa-c1f5-5998-bea4-6ecb8ab17934",
+              "leftValue": "={{ $('Config').first().json.distro_send_enabled }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "56473c56-3ac6-5276-9fa0-85dfb154a4b2",
+              "leftValue": "={{ $('Config').first().json.distro_emails }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1380,
+        -100
+      ],
+      "id": "bd67974b-8f6d-5243-a773-de119431bb4a",
+      "name": "Distribution enabled?"
+    },
+    {
+      "parameters": {
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.slack_approver_id }}",
+          "mode": "id"
+        },
+        "text": "=Test mode: you approved, but distribution is disabled or the list is empty in the Config node. Nothing was sent.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1600,
+        40
+      ],
+      "id": "381882b8-d594-557f-9f2a-d68b2acdbd38",
+      "name": "Slack: test mode"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $('Build deck').first().json.files.pptx }}",
+        "options": {
+          "dataPropertyName": "pptx"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        -260
+      ],
+      "id": "9182d11e-8996-5407-b56a-937696b54a8a",
+      "name": "Read release pptx"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $('Build deck').first().json.files.pdf }}",
+        "options": {
+          "dataPropertyName": "pdf"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        -120
+      ],
+      "id": "71da92ea-b033-5f24-85be-b4ee9d8dadfb",
+      "name": "Read release pdf"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1820,
+        -190
+      ],
+      "id": "1196d44c-15d2-5fb5-95e9-d910c5563c09",
+      "name": "Merge release files"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Config').first().json.distro_emails }}",
+        "subject": "=C2 Weekly Leadership Deck {{ $('Config').first().json.date }}",
+        "emailType": "text",
+        "message": "=Attached is the weekly leadership summary deck for {{ $('Config').first().json.date }} (PowerPoint and PDF).",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "pptx"
+              },
+              {
+                "property": "pdf"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2040,
+        -190
+      ],
+      "id": "bf5e27e6-2d2c-508a-88de-9ad0fbdff54f",
+      "name": "Send to distribution"
+    },
+    {
+      "parameters": {
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.slack_approver_id }}",
+          "mode": "id"
+        },
+        "text": "=Sent the {{ $('Config').first().json.date }} deck to the distribution list exactly as drafted ({{ $('Build deck').first().json.files.pptx }}).",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        2260,
+        -190
+      ],
+      "id": "b3a52708-b7f0-57e7-9f91-f7d0679b05d5",
+      "name": "Slack: sent"
+    },
+    {
+      "parameters": {
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.slack_approver_id }}",
+          "mode": "id"
+        },
+        "text": "=Weekly deck draft for {{ $('Config').first().json.date }} is ready ({{ $('Build deck').first().json.slide_count }} slides, failed checks: {{ $('Build deck').first().json.failed_checks.length ? $('Build deck').first().json.failed_checks.join(', ') : 'none' }}). Check your email: the approval link is there. Nothing has been sent to anyone else.",
+        "otherOptions": {}
+      },
+      "id": "80e1731b-8dc6-5633-ac06-d624bb666ca4",
+      "name": "Slack: draft ready",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        830,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual run": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Read sidecar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read sidecar": {
+      "main": [
+        [
+          {
+            "node": "Extract sidecar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract sidecar": {
+      "main": [
+        [
+          {
+            "node": "read milestones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read milestones": {
+      "main": [
+        [
+          {
+            "node": "Extract milestones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract milestones": {
+      "main": [
+        [
+          {
+            "node": "Aggregate rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate rows": {
+      "main": [
+        [
+          {
+            "node": "Build deck",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read draft pptx": {
+      "main": [
+        [
+          {
+            "node": "Merge draft files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read draft pdf": {
+      "main": [
+        [
+          {
+            "node": "Merge draft files",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge draft files": {
+      "main": [
+        [
+          {
+            "node": "Email draft to reviewer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email draft to reviewer": {
+      "main": [
+        [
+          {
+            "node": "Slack: draft ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request deck approval": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Distribution enabled?": {
+      "main": [
+        [
+          {
+            "node": "Read release pptx",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read release pdf",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack: test mode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge release files": {
+      "main": [
+        [
+          {
+            "node": "Send to distribution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to distribution": {
+      "main": [
+        [
+          {
+            "node": "Slack: sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read release pptx": {
+      "main": [
+        [
+          {
+            "node": "Merge release files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read release pdf": {
+      "main": [
+        [
+          {
+            "node": "Merge release files",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Build deck": {
+      "main": [
+        [
+          {
+            "node": "Read draft pptx",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read draft pdf",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify build failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "Distribution enabled?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack: you will send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: draft ready": {
+      "main": [
+        [
+          {
+            "node": "Request deck approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}
