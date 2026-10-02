@@ -1,6 +1,6 @@
 # AI-Drafted Weekly Status Reports, Released Only After a Person Approves
 
-A demonstration build of a weekly program status pipeline. It pulls tasks, risks and engineering notes for a **fictional defense program** ("Meridian Defense Systems C2 Platform"), has three AI agents draft a milestone-by-milestone report, and sends the draft to a person in Slack. **Nothing is posted or emailed until that person clicks Approve.**
+A demonstration build of a weekly program status pipeline. It pulls tasks and risks from Asana, reads a milestone spreadsheet and raw engineering notes for a **fictional defense program** ("Meridian Defense Systems C2 Platform"), has three AI agents draft a milestone-by-milestone report, and sends the draft to a person in Slack. **Nothing is posted or emailed until that person clicks Approve.**
 
 Built with n8n (workflows), two FastAPI services (one drafts the report, one builds the leadership deck), Claude (the model), Asana, Slack and Gmail. All program data is invented sample data.
 
