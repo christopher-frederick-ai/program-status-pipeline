@@ -1,6 +1,6 @@
 # Detailed Guide: C2 Program Status Reporting Pipeline
 
-n8n orchestration plus a FastAPI agent service for the fictional "Meridian Defense Systems C2 Platform Program". Every week, the pipeline pulls tasks and risks from Asana plus a milestone reference and engineering notes, runs each milestone through three LLM agents (Analyst, Executor, Slide title), drafts the weekly Slack post, and sends it to a human approver as a Slack DM before anything public happens. Only after that approval does the pipeline post to `#c2-program-status` and — via a second workflow — send a narrative status email with a Google Slides deck attached. See [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) for the fuller narrative, the debugging lessons learned along the way, and an honest look at where the slide-deck automation does and doesn't hold up.
+n8n orchestration plus a FastAPI agent service for the fictional "Meridian Defense Systems C2 Platform Program". Every week, the pipeline pulls tasks and risks from Asana plus a milestone reference and engineering notes, runs each milestone through three LLM agents (Analyst, Executor, Slide title), drafts the weekly Slack post, and sends it to a human approver as a Slack DM before anything public happens. Only after that approval does the pipeline post to `#c2-program-status` and — via Workflow 3 — build a leadership deck with Claude that a second human approval releases to a distribution list. (The original template-based Workflow 2 is kept in `n8n/legacy/`.) See [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) for the fuller narrative, the debugging lessons learned along the way, and an honest look at where the slide-deck automation does and doesn't hold up.
 
 ```
 Workflow 1 (report):
@@ -18,17 +18,32 @@ Workflow 1 (report):
                                                     true /                              \ true
                                                         v                                v
                                           Send slack message                   Call 'Slide Build'
-                                          (#c2-program-status,                  (Execute Workflow -> Workflow 2)
+                                          (#c2-program-status,                  (Execute Workflow -> Workflow 3)
                                            new message weekly)
                                           false branch: unconnected -- a decline just ends the run, nothing posts or sends
 
-Workflow 2 (slide deck), triggered only when Workflow 1's approval gate passes:
-  report_<date>.json -> Build slide bullets -> Copy Slides template -> Replace Text
-                                                                            |
-                                                               Export to PDF -> Gmail (report text + PDF attached)
+Workflow 3 (deck review and distribute), triggered when Workflow 1's approval gate passes (or run by hand):
+  Config -> read report_<date>.json + milestones.xlsx -> POST deck-service /render_weekly_deck
+     |  (build failed -> Slack DM, nothing sent)
+     v
+  Read draft pptx + pdf -> Email draft to reviewer -> Slack "draft ready" DM
+     -> Request deck approval (Gmail Send and Wait: approve / decline link, 72 h)
+     -> Approved? --no--> Slack "you will send" (reviewer edits and sends the draft themselves)
+           | yes
+           v
+        Distribution enabled? --no--> Slack "test mode" (nothing sent)
+           | yes (flag true AND address list not empty)
+           v
+        Read the SAME saved pptx + pdf by path -> Send to distribution (Gmail) -> Slack "sent"
+
+(Legacy) Workflow 2, the original template path: report_<date>.json -> Build slide bullets -> Copy Slides
+template -> Replace Text -> Export to PDF -> Gmail. See "Known limitations" for why it was replaced.
 
 agent-service (FastAPI):  n8n --HTTP (X-Service-Token)--> agent-service --Anthropic API--> Claude
                            POST /agents/<name>/run
+
+deck-service (FastAPI):   n8n --HTTP (X-Service-Token)--> deck-service --Anthropic API (code execution + pptx skill)--> Claude
+                           POST /render_weekly_deck   (renders the PDF itself, runs 21 checks, repairs up to 2 rounds)
 ```
 
 ## Setup
@@ -47,16 +62,17 @@ Requires Docker Desktop and Python 3. Commands are shown for Windows PowerShell;
 
    Keep `N8N_ENCRYPTION_KEY` safe and never change it afterwards: n8n uses it to encrypt the credentials it stores, and a different key can no longer read them.
 
-2. Start n8n and the agent service from the repository folder:
+2. Copy the sample source data into the shared folder, then start n8n, the agent service and the deck service from the repository folder (`files\` is mounted into the containers as `/files`; `sample_data\` is the single committed copy of the data):
 
    ```powershell
+   Copy-Item sample_data\* files\
    docker compose up -d --build
    docker compose logs -f agent-service
    ```
 
    n8n is then at http://localhost:5678, and the agent service is at http://localhost:8000 (bound to localhost only). Never run `docker compose down -v`: it deletes the n8n data volume, including your workflows and credentials.
 
-3. Import the two workflows from `n8n/` (`workflow-1-project-status-reporting.json`, `workflow-2-slide-build.json`). Credentials and identifiers were removed from the exports: reconnect your own credentials and replace the `YOUR_...` placeholders (email, Slack user ID, Slides template ID, Asana project IDs). They are also described under *n8n workflows* and *n8n wiring notes* below and pictured in `docs/screenshots/`, and the Code-node scripts are in `n8n/`. Inputs for the file-reading nodes are in `files/`.
+3. Import the workflows from `n8n/`: `workflow-1-project-status-reporting.json` and `workflow-3-deck-review.json` (the original Workflow 2 is in `n8n/legacy/`). In Workflow 1, point the `Call 'Slide Build'` node at the imported Workflow 3. Credentials and identifiers were removed from the exports: reconnect your own credentials and replace the `YOUR_...` placeholders (email, Slack user ID, Asana project IDs, and the Header Auth credential for the two services). They are also described under *n8n workflows* and *n8n wiring notes* below and pictured in `docs/screenshots/`, and the Code-node scripts are in `n8n/`. Inputs for the file-reading nodes are in `files/`.
 
 4. Smoke test (Python 3, no packages needed):
 
@@ -106,7 +122,21 @@ Status codes: 401 bad or missing token, 404 unknown agent, 413 input too large, 
 
 Nothing public happens automatically from there. `Format Slack message` feeds `Request approval`, a Slack node (Resource: Message, Action: "Send a message and wait for response", Response Type: Approval) that DMs the drafted post to the approver and pauses the whole execution until they click Approve or Decline. Its output lands on `Approved?`, a plain IF node (Boolean condition `{{ $json.data.approved }}` is `true`). Only the IF node's **true** branch is wired up, to two parallel nodes: `Send slack message` (posts `{{ $json.slack_text }}` to `#c2-program-status` as a new top-level message — see the wiring note below on why it doesn't thread off the earlier test post) and `Call 'Slide Build'` (an `Execute Workflow` node pointed at Workflow 2). The **false** branch is left unconnected on purpose — a decline just ends the execution there, with no Slack post and no slide deck. `Save sidecar` no longer connects directly to Workflow 2; the sidecar file still gets written every run (so it exists on disk for later reference), but Workflow 2 only actually *runs* when the approval gate passes.
 
-**Workflow 2 (slide deck)** — starts from a `When Executed by Another Workflow` trigger (required for Workflow 1 to be able to call it; a Manual Trigger only responds to a click in its own editor tab, not to another workflow's `Execute Workflow` node), and now only ever fires from `Call 'Slide Build'` after a human has approved the week's report. `Read report json`/`Parse report json` load the sidecar, `Build slide bullets` (`build_slide_bullets.js`) splits each milestone's already-human-reviewed Executor paragraph into up to 5 bullets and flattens everything — `DATE`, `<KEY>_TITLE`/`_SUBTITLE`/`_B1..B5`, plus `report`/`subject` passed through from the sidecar — onto one item. `Copy file` (Drive, Copy) duplicates the Slides template; `Replace txt` (Google Slides, Replace Text) fills in the placeholders; `download slides pdf` (Drive, Download, with Google File Conversion set to PDF) exports it; `Send a message` (Gmail) sends the combined email — report text in the body, deck attached.
+**Workflow 2 (slide deck) — legacy, replaced by Workflow 3 and kept in `n8n/legacy/`.** It starts from a `When Executed by Another Workflow` trigger (required for Workflow 1 to be able to call it; a Manual Trigger only responds to a click in its own editor tab, not to another workflow's `Execute Workflow` node), and now only ever fires from `Call 'Slide Build'` after a human has approved the week's report. `Read report json`/`Parse report json` load the sidecar, `Build slide bullets` (`build_slide_bullets.js`) splits each milestone's already-human-reviewed Executor paragraph into up to 5 bullets and flattens everything — `DATE`, `<KEY>_TITLE`/`_SUBTITLE`/`_B1..B5`, plus `report`/`subject` passed through from the sidecar — onto one item. `Copy file` (Drive, Copy) duplicates the Slides template; `Replace txt` (Google Slides, Replace Text) fills in the placeholders; `download slides pdf` (Drive, Download, with Google File Conversion set to PDF) exports it; `Send a message` (Gmail) sends the combined email — report text in the body, deck attached.
+
+## Workflow 3 and the deck service
+
+**Why it exists.** Workflow 2 filled a fixed Slides template, which cannot grow or shrink with the week's content (see "Known limitations"). Workflow 3 asks Claude to build the deck each week instead, from the vetted sidecar (`report_<date>.json`) plus `milestones.xlsx`, and treats the result as a draft for a person to finish. Everything the deck says comes from content a reviewer already approved: the deck service withholds the Analyst's own status and explanation notes and uses only the approved report text.
+
+**The deck service** (`deck_service/`, FastAPI, port 8010, internal to the compose network). `POST /render_weekly_deck` takes `{sidecar, milestone_rows, program?, options?}` exactly as n8n's Extract From File nodes produce them, so n8n needs no Code node. The adapter joins the two by exact milestone name (a mismatch or duplicate is a 422, not a silent gap). The builder calls Claude with the code execution tool and the PowerPoint skill, using `deck_service/agents/deck_builder.md` as the instructions. The service then renders the PDF with LibreOffice and runs 21 deterministic checks (text overlap, shapes inside the slide, nothing in the footer band, accuracy flags matching the input, no invented ratings, and so on). Failed checks go back to the model with page images for up to `DECK_MAX_REPAIRS` rounds. A deck is always returned if one was produced; `status: "needs_review"` means checks still fail. Auth is the same `X-Service-Token` pattern as the agent service, failing closed. Error messages carry the error type only, and logs carry sizes and token counts, never content. Full request, response and configuration detail is in [`deck_service/README.md`](../deck_service/README.md).
+
+**The workflow** (`n8n/workflow-3-deck-review.json`, node by node in [`WORKFLOW_3_SPEC.md`](WORKFLOW_3_SPEC.md)). A `Config` node holds `date`, `reviewer_email`, `slack_approver_id`, `distro_emails` and `distro_send_enabled`. The build node has a 20-minute timeout and retries off, since a retry would pay for a second run. The deck is generated once: release sends the saved file by path, so nothing regenerates between draft and send. Distribution needs the flag **and** a non-empty list, and both default to off.
+
+**Which approval path.** The Slack "Send and Wait" buttons are interactive: Slack posts the click to a public HTTPS URL, so a localhost n8n never receives it (the buttons render, clicks do nothing). Gmail Send and Wait sends links that open in your own browser, which works locally. The main workflow therefore uses Slack for notices and Gmail for the approval click. `n8n/alternatives/` has the Slack-button version (for an n8n with a public URL, `WEBHOOK_URL` set, and the Slack app's Interactivity Request URL and signing secret configured) and a Gmail-only version. Workflow 1's own Slack approval has the same local-n8n limit.
+
+**Cost control.** The first unconstrained run took 51 sandbox steps and cost $46.44, because each step re-sent a context that had grown from about 60k to over 500k tokens. The fixes: a work budget in the instructions (write the script once, run it once, no self-inspection), quality checks moved from the model into the service's own code, a hard cap of 6 model calls per request, no pause continuations, and a 20,000-token output limit (the SDK refuses more without streaming). A typical run is now one model call (about 130k input tokens, 2 minutes) or two when a repair round is needed (about 380k, 4 minutes), roughly $1 to $2. The service logs per-call token counts and the names of any failed checks so changes can be measured.
+
+**Running it.** Set the new variables in `.env.example`, then `docker compose up -d --build deck-service` from the repo root. Build the Header Auth credential in n8n with the same `SERVICE_SHARED_SECRET`. To test without Asana or Workflow 1, import `workflow-3-deck-review.json`, set `Config.date` to a date that has a `report_<date>.json` in `files/`, and use the Manual run trigger. To test the send path safely, set `distro_send_enabled` true with only your own address in `distro_emails`.
 
 ## n8n wiring notes
 
@@ -131,6 +161,15 @@ Nothing public happens automatically from there. `Format Slack message` feeds `R
 - **Don't hardcode a prefix in front of a field that already has one.** Workflow 2's Gmail node built its Subject as `Weekly Status Report{{ $('Build slide bullets').item.json.subject }}`, but the sidecar's own `subject` field (from `format_report.js`) already starts with "Weekly Status Report..." — so every email went out titled `Weekly Status ReportMeridian Defense Systems C2 Platform Program: Weekly Status Report (2026-09-24)`, duplicated and run together with no space. The node "succeeded" and the email arrived; the only sign anything was wrong was actually reading the subject line. Fixed by setting Subject to just `{{ $('Build slide bullets').item.json.subject }}`.
 - **A successful send doesn't mean prompt delivery.** Both n8n's execution log and the Gmail API's own response can report success (a real message ID, `SENT`/`INBOX` labels) well before the email is visible anywhere — we saw a combined report+deck email sit for over an hour between a successful send and actually showing up, matching a plain Gmail-to-Gmail test email sent around the same time that was also delayed by several minutes. Don't treat "no email yet" a few minutes after a run as proof the pipeline failed; check the execution log and the Gmail node's own output first.
 
+- **Workflow 3 gotchas (found while testing it).**
+  - *Dates:* in an expression, an unquoted `{{ 2026-09-24 }}` is arithmetic and evaluates to 1993. For a test date, use Fixed text `2026-09-24`, or quote it in an expression. `Config.date` defaults to `{{ $json.date || $today.toISODate() }}` and must be switched back after testing.
+  - *File not found:* the Read node reads from the container's `/files` mount. If the running container was started from a different folder than the one you are editing, it reads the old folder. Run `docker compose up -d` from the folder that holds the compose file you mean.
+  - *`ENOTFOUND deck-service`:* the service is not defined in (or not started by) the compose file n8n came up with. `docker compose up -d --build deck-service` starts only that service, so run a plain `docker compose up -d` afterward if n8n is not on port 5678.
+  - *Slack buttons do nothing:* see "Which approval path" above. A node that is waiting for a response cannot be stopped from the canvas; clear stale waiting executions from the Executions tab.
+  - *Slack messages seem to vanish:* check you are signed in to the workspace the app was installed in before concluding the bot was removed.
+  - *Gmail Send and Wait:* use `<br>` for line breaks in its message field.
+  - *Asana custom fields are a paid feature.* After a trial ends, tasks come back without them and `Map tasks` stops with "No task has a Related Milestone value".
+
 ## Security and logging
 
 - Shared-secret header, compared in constant time. The service refuses to start if `SERVICE_SHARED_SECRET` is empty.
@@ -146,6 +185,8 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
+The deck service has its own suite (39 tests): `cd deck_service && pip install -r requirements.txt pytest && pytest`. It also checks that the committed workflow files contain no credentials, Slack IDs or email addresses.
+
 The tests use a fake LLM plus a mocked HTTP transport for the real SDK wrapper. They make no network calls and need no API key.
 
 ## Analyst instructions
@@ -158,7 +199,9 @@ The tests use a fake LLM plus a mocked HTTP transport for the real SDK wrapper. 
 
 ## Known limitations
 
-**The slide deck cannot be fully automated with the current approach, and that's a structural finding, not a bug to fix.** Google Slides' `replaceAllText` (what n8n's Replace Text operation calls under the hood) is pure text substitution — it can swap the text inside an existing placeholder, but it has no concept of inserting or removing a bullet paragraph. Any template built this way needs a fixed number of bullet slots decided when you design the template, while the Executor's generated paragraph is inherently variable length (1–3 sentences per its own instructions, occasionally more). The result is unavoidable either way: fewer sentences than slots leaves visible blank bullets, more sentences than slots silently drops content with no error. Reaching a deck that actually grows and shrinks with the week's content requires calling the Slides API at the paragraph/object level (`insertText` + `createParagraphBullets` per bullet, targeting a shape's object ID) instead of a global find-and-replace — a materially different and larger integration than what's built here.
+**Update:** Workflow 3 replaces the template path described in the next two paragraphs. It builds the deck with Claude, so a light or heavy week no longer breaks it, but it produces a draft a person reviews and finishes, not a final deck, and some runs need a layout repair round. The history below is why the template approach was dropped.
+
+**(Historical, Workflow 2) The slide deck cannot be fully automated with the current approach, and that's a structural finding, not a bug to fix.** Google Slides' `replaceAllText` (what n8n's Replace Text operation calls under the hood) is pure text substitution — it can swap the text inside an existing placeholder, but it has no concept of inserting or removing a bullet paragraph. Any template built this way needs a fixed number of bullet slots decided when you design the template, while the Executor's generated paragraph is inherently variable length (1–3 sentences per its own instructions, occasionally more). The result is unavoidable either way: fewer sentences than slots leaves visible blank bullets, more sentences than slots silently drops content with no error. Reaching a deck that actually grows and shrinks with the week's content requires calling the Slides API at the paragraph/object level (`insertText` + `createParagraphBullets` per bullet, targeting a shape's object ID) instead of a global find-and-replace — a materially different and larger integration than what's built here.
 
 Given that, this pipeline deliberately stops short of that build-out. The slide-deck path exists to demonstrate what the last mile of "AI-generated weekly status" actually takes with today's low-code tooling, not to ship a production deck generator. If a weekly slide deck is genuinely wanted as a deliverable, the realistic options are: a person does final slide assembly each week using the generated bullets as raw material, or someone invests in the object-level Slides API work above. See [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) for the full reasoning and the rest of what broke and got fixed along the way.
 
@@ -169,5 +212,8 @@ Three smaller, deliberate loose ends, left as-is because the right call is subje
 
 ## What is not done yet
 
+- Workflow 3 was tested through to a send to the reviewer's own address. Not tested: the decline branch, Workflow 1 calling Workflow 3 (the Asana trial ended first), the Slack-button variant, and data much larger than four milestones (cost per call should grow about linearly, but that is an expectation, not a measurement).
+- Replacing the Asana nodes with CSV input was considered and deferred; Asana is the intended source and each user supplies their own paid subscription.
+- A decline of the deck approval hands the draft to the reviewer but does not record why.
 - The Planner, the other three Executors and the Reviewer described in the original design were never built — this pipeline only implements the Analyst, Executor and Slide title agents. Each additional one would be one instructions file plus one `AgentSpec` in `app/agents.py`.
 - Not verified here: the Docker image build and the n8n container running against it end-to-end in a from-scratch environment (this was built and run against an already-running n8n instance).
